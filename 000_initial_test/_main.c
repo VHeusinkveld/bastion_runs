@@ -18721,7 +18721,7 @@ struct sOutput {
  double dtProfiles;
 };
 
-struct sOutput out = {.dtVisual=100., .dtProfiles=100.};
+struct sOutput out = {.dtVisual=0.2, .dtProfiles=0.2};
 
 static int init_0_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (i = 0);   *ip = i; *tp = t;   return ret; } static int init_0 (const int i, const double t, Event * _ev) { trace ("init_0", "./diagnostics.h", 26); {
  vphi = -M_PI/6.;
@@ -18898,8 +18898,8 @@ mpi_all_reduce_double (bEnergy, MPI_SUM);
   printf("ERROR Check fan volume, V=%g, Vr=%g\n",rot.V, dia.rotVol);
  }
 
- static FILE * fpout =NULL; if (!fpout || i == 0) fpout = pid() > 0 ? fopen("/dev/null", "w") :  fopen("./results/output","w");
- static FILE * fpca =NULL; if (!fpca || i == 0) fpca = pid() > 0 ? fopen("/dev/null", "w") :  fopen("./results/case","w");
+ static FILE * fpout =NULL; if (!fpout || i == 0) fpout = pid() > 0 ? fopen("/dev/null", "w") :  fopen("output","w");
+ static FILE * fpca =NULL; if (!fpca || i == 0) fpca = pid() > 0 ? fopen("/dev/null", "w") :  fopen("case","w");
 
  if(t==0.){
   fprintf(fpca,"L0\n %g\n",L0);
@@ -18950,7 +18950,7 @@ static int movies_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; dou
     draw_vof((struct _draw_vof){"fan", .fc = {1,0,0}});
     squares((struct _squares){"bdiff", .n = {rn[0],rn[1],rn[2]}, .alpha = alp, .min = 0., .max = .036});
     } end_translate(); }
-    save((struct _save){"./results/visual_3d.mp4"});
+    save((struct _save){"visual_3d.mp4"});
 #line 166 "./diagnostics.h"
  delete (((scalar []){bdiff,{-1}}));  end_trace("movies", "./diagnostics.h", 166); } return 0; } 
 #line 13 "main.c"
