@@ -16285,7 +16285,2675 @@ mpi_all_reduce_double (tempW, MPI_SUM);
  rot.Work += tempW;
 }
 #line 12 "main.c"
+#line 1 "diagnostics.h"
+#line 1 "./diagnostics.h"
+#line 1 "view.h"
+#line 1 "/home/vinlinux/basilisk/src/view.h"
+#line 64 "/home/vinlinux/basilisk/src/view.h"
+# include <GL/gl.h>
+# include <GL/glu.h>
 
+
+#include <gl/framebuffer.h>
+#include <gl/gl2ps/gl2ps.h>
+#include <gl/trackball.h>
+#include <gl/utils.h>
+
+
+#line 1 "utils.h"
+#line 75 "/home/vinlinux/basilisk/src/view.h"
+#line 1 "input.h"
+#line 1 "/home/vinlinux/basilisk/src/input.h"
+#line 16 "/home/vinlinux/basilisk/src/input.h"
+struct InputPGM {
+
+  scalar s;
+  FILE * fp;
+
+  double ox, oy, width;
+};
+
+void input_pgm (struct InputPGM p)
+{
+  scalar s = p.s;
+  if (p.width == 0.) p.width = L0;
+
+  char line[81];
+  if (!fgets (line, 81, p.fp)) {
+    fprintf (qstderr(), "input_pgm: could not read magic number\n");
+    exit (1);
+  }
+  if (strcmp (line, "P2\n") && strcmp (line, "P5\n")) {
+    fprintf (qstderr(), "input_pgm: magic number '%s' does not match PGM\n",
+      line);
+    exit (1);
+  }
+  int binary = !strcmp (line, "P5\n");
+  if (!fgets (line, 81, p.fp)) {
+    fprintf (qstderr(), "input_pgm: could not read width and height\n");
+    exit (1);
+  }
+  int width, height;
+  while (line[0] == '#' && fgets (line, 81, p.fp));
+  if (line[0] == '#' || sscanf (line, "%d %d", &width, &height) != 2) {
+    fprintf (qstderr(), "input_pgm: could not read width and height\n");
+    exit (1);
+  }
+  if (!fgets (line, 81, p.fp)) {
+    fprintf (qstderr(), "input_pgm: could not read maxval\n");
+    exit (1);
+  }
+  int maxval;
+  if (sscanf (line, "%d", &maxval) != 1) {
+    fprintf (qstderr(), "input_pgm: could not read maxval\n");
+    exit (1);
+  }
+  if (maxval < 256) {
+    unsigned char * a = ((unsigned char *) pmalloc ((width*height)*sizeof(unsigned char),__func__,__FILE__,__LINE__));
+    size_t n = 0;
+    if (binary)
+      n = fread (a, 1, width*height, p.fp);
+    else {
+      int v;
+      while (n < width*height && fscanf (p.fp, "%d ", &v) == 1)
+ a[n++] = v;
+    }
+    if (n != width*height) {
+      fprintf (qstderr(), "input_pgm: read only %ld values\n", n);
+      exit (1);
+    }
+     { foreach(){
+
+#line 73 "/home/vinlinux/basilisk/src/input.h"
+ {
+      int i = (x - p.ox)*width/p.width, j = (y - p.oy)*width/p.width;
+      if (i >= 0 && i < width && j >= 0 && j < height)
+ val(s,0,0,0) = 1. - a[(height - 1 - j)*width + i]/(double)maxval;
+      else
+ val(s,0,0,0) = 0.;
+    } } end_foreach(); }
+    pfree (a,__func__,__FILE__,__LINE__);
+  }
+  else {
+    unsigned short * a = ((unsigned short *) pmalloc ((width*height)*sizeof(unsigned short),__func__,__FILE__,__LINE__));
+    size_t n = 0;
+    if (binary)
+      n = fread (a, 2, width*height, p.fp);
+    else {
+      int v;
+      while (n < width*height && fscanf (p.fp, "%d ", &v) == 1)
+ a[n++] = v;
+    }
+    if (n != width*height) {
+      fprintf (qstderr(), "input_pgm: read only %ld values\n", n);
+      exit (1);
+    }
+     { foreach(){
+
+#line 96 "/home/vinlinux/basilisk/src/input.h"
+ {
+      int i = (x - p.ox)*width/p.width, j = (y - p.oy)*width/p.width;
+      if (i >= 0 && i < width && j >= 0 && j < height)
+ val(s,0,0,0) = 1. - a[(height - 1 - j)*width + i]/(double)maxval;
+      else
+ val(s,0,0,0) = 0.;
+    } } end_foreach(); }
+    pfree (a,__func__,__FILE__,__LINE__);
+  }
+}
+
+static void next_char (FILE * fp, int target)
+{
+  int c = fgetc(fp), para = 0;
+  while (c != EOF && (c != target || para > 0)) {
+    if (c == '{') para++;
+    if (c == '}') para--;
+    c = fgetc(fp);
+  }
+  if (c != target) {
+    fprintf (qstderr(), "input_gfs(): error: expecting '%c'\n", target);
+    exit (1);
+  }
+}
+
+static int next_string (FILE * fp, const char * target)
+{
+  int slen = strlen (target), para = 0;
+  char s[slen + 1];
+  s[slen] = '\0';
+  int len = 0, c = fgetc (fp);
+  while (c != EOF && len < slen) {
+    if (c == '{') para++;
+    if (c == '}') para--;
+    s[len++] = c;
+    c = fgetc (fp);
+  }
+  while (c != EOF && para >= 0) {
+    if (!strcmp (s, target) && para == 0)
+      break;
+    if (c == '{') para++;
+    if (c == '}') para--;
+    for (int i = 0; i < slen - 1; i++)
+      s[i] = s[i+1];
+    s[slen - 1] = c;
+    c = fgetc (fp);
+  }
+  if (strcmp (s, target))
+    c = -1;
+  return c;
+}
+#line 166 "/home/vinlinux/basilisk/src/input.h"
+
+void input_gfs (struct OutputGfs p)
+{ trace ("input_gfs", "/home/vinlinux/basilisk/src/input.h", 168);
+  not_mpi_compatible();
+
+  bool opened = false;
+  if (p.fp == NULL) {
+    if (p.file == NULL)
+      p.fp = stdin;
+    else if (!(p.fp = fopen (p.file, "r"))) {
+      perror (p.file);
+      exit (1);
+    }
+    else
+      opened = true;
+  }
+  bool input_all = (p.list == all);
+  if (p.list == NULL) p.list = all;
+
+
+  init_grid (1);
+
+
+  next_char (p.fp, '{');
+
+  char * s = ((char *) pmalloc ((1)*sizeof(char),__func__,__FILE__,__LINE__));
+  int len = 0;
+  int c = fgetc(p.fp);
+  while (c != EOF && c != '}') {
+    s[len++] = c;
+    s = (char *) prealloc (s, (len + 1)*sizeof(char),__func__,__FILE__,__LINE__);
+    s[len] = '\0';
+    c = fgetc(p.fp);
+  }
+  if (c != '}') {
+    fprintf (qstderr(), "input_gfs(): error: expecting '}'\n");
+    exit (1);
+  }
+
+  char * s1 = strstr (s, "variables");
+  if (!s1) {
+    fprintf (qstderr(), "input_gfs(): error: expecting 'variables'\n");
+    exit (1);
+  }
+
+  s1 = strstr (s1, "=");
+  if (!s1) {
+    fprintf (qstderr(), "input_gfs(): error: expecting '='\n");
+    exit (1);
+  }
+  s1++;
+
+  while (strchr (" \t", *s1))
+    s1++;
+
+  scalar * input = NULL;
+  s1 = strtok (s1, ", \t");
+  while (s1) {
+    char * name = replace (s1, '_', '.', false);
+    bool found = false;
+    if (p.list) for (scalar s = *p.list, *_i88 = p.list; ((scalar *)&s)->i >= 0; s = *++_i88)
+      if (!is_constant(s) && _attribute[s.i].name && !strcmp (_attribute[s.i].name, name)) {
+ input = list_append (input, s);
+ found = true; break;
+      }
+    if (!found) {
+      if (input_all) {
+ scalar s = new_scalar("s");
+ pfree (_attribute[s.i].name,__func__,__FILE__,__LINE__);
+ _attribute[s.i].name = pstrdup (name,__func__,__FILE__,__LINE__);
+ input = list_append (input, s);
+      }
+      else
+ input = list_append (input, (scalar){INT_MAX});
+    }
+    pfree (name,__func__,__FILE__,__LINE__);
+    s1 = strtok (NULL, ", \t");
+  }
+  pfree (s,__func__,__FILE__,__LINE__);
+
+  next_char (p.fp, '{');
+  double t1 = 0.;
+  if (next_string (p.fp, "Time") >= 0) {
+    next_char (p.fp, '{');
+    next_char (p.fp, 't');
+    next_char (p.fp, '=');
+    if (fscanf (p.fp, "%lf", &t1) != 1) {
+      fprintf (qstderr(), "input_gfs(): error: expecting 't'\n");
+      exit (1);
+    }
+    next_char (p.fp, '}');
+    next_char (p.fp, '}');
+  }
+
+  if (next_string (p.fp, "Box") < 0) {
+    fprintf (qstderr(), "input_gfs(): error: expecting 'GfsBox'\n");
+    exit (1);
+  }
+
+  next_char (p.fp, '{');
+  next_char (p.fp, '{');
+  next_char (p.fp, '\n');
+
+  scalar * listm = ((scalar []){cm,fm.x,fm.y,fm.z,{-1}});
+  scalar * listr = !is_constant(cm) ? listm : NULL;
+  NOT_UNUSED (listr);
+
+   { foreach_cell(){
+
+#line 273 "/home/vinlinux/basilisk/src/input.h"
+ {
+    unsigned flags;
+    if (fread (&flags, sizeof (unsigned), 1, p.fp) != 1) {
+      fprintf (qstderr(), "input_gfs(): error: expecting 'flags'\n");
+      exit (1);
+    }
+    if (!(flags & (1 << 4)) && is_leaf(cell))
+      refine_cell (point, listr, 0, NULL);
+    double a;
+    if (fread (&a, sizeof (double), 1, p.fp) != 1 || a != -1) {
+      fprintf (qstderr(), "input_gfs(): error: expecting '-1'\n");
+      exit (1);
+    }
+    if (input) for (scalar s = *input, *_i89 = input; ((scalar *)&s)->i >= 0; s = *++_i89) {
+      if (fread (&a, sizeof (double), 1, p.fp) != 1) {
+ fprintf (qstderr(), "input_gfs(): error: expecting a scalar\n");
+ exit (1);
+      }
+      if (s.i != INT_MAX) {
+ if (_attribute[s.i].v.x.i >= 0) {
+
+
+
+   if (_attribute[s.i].v.x.i == s.i) {
+     s = _attribute[s.i].v.y;
+     val(s,0,0,0) = a;
+   }
+   else if (_attribute[s.i].v.y.i == s.i) {
+     s = _attribute[s.i].v.x;
+     val(s,0,0,0) = - a;
+   }
+
+
+   else
+     val(s,0,0,0) = a;
+
+ }
+ else
+   val(s,0,0,0) = a;
+      }
+    }
+    if (is_leaf(cell))
+      continue;
+  } } end_foreach_cell(); }
+  boundary (listm);
+  boundary (input);
+
+  pfree (input,__func__,__FILE__,__LINE__);
+  if (opened)
+    fclose (p.fp);
+
+
+  while (t < t1 && events (false))
+    t = tnext;
+  events (false);
+ end_trace("input_gfs", "/home/vinlinux/basilisk/src/input.h", 328); }
+#line 357 "/home/vinlinux/basilisk/src/input.h"
+struct InputGRD {
+  scalar s;
+  FILE * fp;
+  char * file;
+  double nodatavalue;
+  bool linear;
+};
+
+void input_grd (struct InputGRD p)
+{
+  scalar input = p.s;
+
+  bool opened = false;
+  if (p.fp == NULL) {
+    if (p.file == NULL)
+      p.fp = stdin;
+    else if (!(p.fp = fopen (p.file, "r"))) {
+      perror (p.file);
+      exit (1);
+    }
+    else
+      opened = true;
+  }
+
+
+  double DeltaGRD;
+  int nx, ny;
+  double XG0, YG0, ndv;
+
+
+  char waste[100];
+  fscanf (p.fp, "%s %d", waste, &nx);
+  fscanf (p.fp, "%s %d", waste, &ny);
+  fscanf (p.fp, "%s %lf", waste, &XG0);
+  fscanf (p.fp, "%s %lf", waste, &YG0);
+  fscanf (p.fp, "%s %lf", waste, &DeltaGRD);
+  fscanf (p.fp, "%s %lf", waste, &ndv);
+
+
+  if (!p.nodatavalue)
+    p.nodatavalue = ndv;
+
+
+  double * value = ((double *) pmalloc ((nx*ny)*sizeof(double),__func__,__FILE__,__LINE__));
+  for (int i = ny - 1; i >= 0; i--)
+    for (int j = 0 ; j < nx; j++)
+      fscanf (p.fp, "%lf ", &value[j + i*nx]);
+
+  double LGx0 = nx*DeltaGRD;
+  double LGy0 = ny*DeltaGRD;
+  bool warning = false;
+
+   { foreach(){
+
+#line 409 "/home/vinlinux/basilisk/src/input.h"
+ {
+
+    bool incl = (x >= XG0 - DeltaGRD/2. &&
+   x <= XG0 + LGx0 + DeltaGRD/2. &&
+   y >= YG0 - DeltaGRD/2. &&
+   y <= YG0 + LGy0 + DeltaGRD/2.);
+    if (incl) {
+      double val;
+
+      bool ring = (x >= XG0 &&
+     x <= XG0 + LGx0 &&
+     y >= YG0 &&
+     y <= YG0 + LGy0);
+      if (p.linear && ring ) {
+ int j = (x - XG0)/DeltaGRD; int i = (y - YG0)/DeltaGRD;
+ double dx = x -(j*DeltaGRD + XG0); double dy = y - (i*DeltaGRD + YG0);
+ val = value[j + i*nx]
+   + dx*(value[j + 1 + i*nx] - value[j + i*nx])/DeltaGRD
+   + dy*(value[j + (i + 1)*nx] - value[j + i*nx])/DeltaGRD
+   + dx*dy*(value[j + i*nx] + value[j +1 + (i+1)*nx]
+     - value[j + (i + 1)*nx]-value[j + 1 + i*nx])/sq(DeltaGRD);
+      }
+      else {
+ int j = (x - XG0 + DeltaGRD/2.)/DeltaGRD;
+ int i = (y - YG0 + DeltaGRD/2.)/DeltaGRD;
+ val = value[j + i*nx];
+      }
+      val(input,0,0,0) = val;
+      if (val == ndv)
+ val(input,0,0,0) = p.nodatavalue;
+    }
+    else {
+      val(input,0,0,0) = p.nodatavalue;
+      warning = true;
+    }
+  } } end_foreach(); }
+  pfree (value,__func__,__FILE__,__LINE__);
+
+  if (warning)
+    fprintf (qstderr(),
+      "input_grd(): Warning: Raster data is not covering all"
+      " the simulation area\n");
+
+  if (opened)
+    fclose (p.fp);
+}
+#line 76 "/home/vinlinux/basilisk/src/view.h"
+
+
+
+
+
+
+struct _bview {
+  float tx, ty, sx, sy, sz;
+  float quat[4];
+  float fov;
+
+  bool gfsview;
+  bool vector;
+
+  float bg[3];
+  float lc;
+  float res;
+
+  unsigned width, height, samples;
+
+  framebuffer * fb;
+  Frustum frustum;
+
+  void (* map) (coord *);
+
+  int ni;
+
+  bool active;
+};
+
+typedef struct _bview bview;
+
+
+
+
+bview * bview_new() {
+  bview * p = ((bview *) pcalloc (1, sizeof(bview),__func__,__FILE__,__LINE__));
+
+  p->tx = p->ty = 0;
+  p->sx = p->sy = p->sz = 1.;
+  p->quat[0] = p->quat[1] = p->quat[2] = 0; p->quat[3] = 1;
+  p->fov = 24.;
+  gl_trackball (p->quat, 0.0, 0.0, 0.0, 0.0);
+
+
+
+
+  p->bg[0] = 0.3; p->bg[1] = 0.4; p->bg[2] = 0.6;
+
+  p->res = 1.;
+  p->lc = 0.001;
+
+  p->vector = false;
+
+  p->samples = 4;
+  p->width = 600*p->samples, p->height = 600*p->samples;
+
+  p->fb = framebuffer_new (p->width, p->height);
+
+  init_gl();
+  p->active = false;
+
+  return p;
+}
+
+
+
+
+void bview_destroy (bview * p)
+{
+  framebuffer_destroy (p->fb);
+  pfree (p,__func__,__FILE__,__LINE__);
+}
+
+
+
+
+static bview * _view = NULL;
+
+
+
+
+
+
+static void destroy_view()
+{
+  assert (_view);
+  bview_destroy (_view);
+}
+
+bview * get_view() {
+  if (!_view) {
+    _view = bview_new();
+    free_solver_func_add (destroy_view);
+  }
+  return _view;
+}
+
+
+
+
+static void redraw() {
+  bview * view = get_view();
+
+
+  disable_fpe (FE_DIVBYZERO|FE_INVALID);
+
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+  double max = 2.;
+
+
+
+
+
+  gluPerspective (view->fov, view->width/(float)view->height, 1., 1. + 2.*max);
+  glMatrixMode (GL_MODELVIEW);
+
+  glLoadIdentity ();
+  glTranslatef (view->tx, view->ty, - (1. + max));
+
+  GLfloat m[4][4];
+  gl_build_rotmatrix (m, view->quat);
+  glMultMatrixf (&m[0][0]);
+
+  if (view->gfsview) {
+    m[0][0] = 0., m[0][1] = 0., m[0][2] = -1.;
+    m[1][0] = 0., m[1][1] = -1., m[1][2] = 0.;
+    m[2][0] = 1., m[2][1] = 0., m[2][2] = 0.;
+    glMultMatrixf (&m[0][0]);
+  }
+
+  glScalef (view->sx/L0, view->sy/L0, view->sz/L0);
+
+  glClearColor (view->bg[0], view->bg[1], view->bg[2], 0.);
+  glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+  gl_get_frustum (&view->frustum);
+
+  view->active = true;
+  view->ni = 0;
+}
+
+
+
+
+bview * draw() {
+  bview * view = get_view();
+  if (!view->active)
+    redraw();
+  return view;
+}
+
+
+
+
+
+
+
+typedef void * pointer;
+
+
+
+static pointer compose_image (bview * view) { trace ("compose_image", "/home/vinlinux/basilisk/src/view.h", 239);
+  { pointer _ret =  framebuffer_image((view)->fb); end_trace("compose_image", "/home/vinlinux/basilisk/src/view.h", 240);  return _ret; }
+ end_trace("compose_image", "/home/vinlinux/basilisk/src/view.h", 241); }
+#line 339 "/home/vinlinux/basilisk/src/view.h"
+#line 1 "draw.h"
+#line 1 "/home/vinlinux/basilisk/src/draw.h"
+
+
+
+
+
+#line 1 "gl/font.h"
+#line 1 "/home/vinlinux/basilisk/src/gl/font.h"
+void gl_StrokeCharacter( int character );
+void gl_StrokeString( const char *string );
+float gl_StrokeWidth( int character );
+float gl_StrokeLength( const char *string );
+GLfloat gl_StrokeHeight( );
+#line 7 "/home/vinlinux/basilisk/src/draw.h"
+
+
+
+
+void clear()
+{
+  bview * view = get_view();
+  if (view->active)
+    view->active = false;
+  draw();
+}
+#line 46 "/home/vinlinux/basilisk/src/draw.h"
+struct _view_set {
+  float tx, ty;
+  float fov;
+  float quat[4];
+  float sx, sy, sz;
+  unsigned width, height, samples;
+  float bg[3];
+  float theta, phi, psi;
+  bool relative;
+  float res;
+  char * camera;
+  void (* map) (coord *);
+  float p1x, p1y, p2x, p2y;
+  bview * view;
+};
+
+void view (struct _view_set p)
+{
+  bview * v = p.view ? p.view : get_view();
+  if (p.fov) {
+    if (p.relative)
+      v->fov += (0.1 + 3.*v->fov)*p.fov;
+    else
+      v->fov = p.fov;
+    v->fov = clamp(v->fov,0.01,100.);
+  }
+  for (int i = 0; i < 4; i++)
+    if (p.quat[i]) {
+      for (int j = 0; j < 4; j++)
+ v->quat[j] = p.quat[j];
+      break;
+    }
+  if (p.tx) v->tx = p.relative ? v->tx + p.tx*0.02*(0.01 + 3.*v->fov) : p.tx;
+  if (p.ty) v->ty = p.relative ? v->ty + p.ty*0.02*(0.01 + 3.*v->fov) : p.ty;
+  if (p.sx) v->sx = p.sx;
+  if (p.sy) v->sy = p.sy;
+  if (p.sz) v->sz = p.sz;
+  if (p.bg[0] || p.bg[1] || p.bg[2])
+    for (int i = 0; i < 3; i++)
+      v->bg[i] = p.bg[i];
+
+  if (p.camera) {
+    v->gfsview = false;
+    if (strlen(p.camera) >= 4 &&
+ !strcmp (&p.camera[strlen(p.camera) - 4], ".gfv")) {
+      FILE * fp = fopen (p.camera, "r");
+      if (!fp) {
+ perror (p.camera);
+ exit (1);
+      }
+      char s[81];
+      float q[4], fov;
+      int nq = 0, nf = 0;
+      while (fgets (s, 81, fp) && (!nq || !nf)) {
+ if (!nq)
+   nq = sscanf (s, "  q0 = %f q1 = %f q2 = %f q3 = %f",
+         &q[0], &q[1], &q[2], &q[3]);
+ if (!nf)
+   nf = sscanf (s, "  fov = %f", &fov);
+      }
+      if (nq != 4 || nf != 1) {
+ fprintf (qstderr(), "%s: not a valid gfv file\n", p.camera);
+ exit (1);
+      }
+      for (int j = 0; j < 4; j++)
+ v->quat[j] = q[j];
+      v->fov = fov;
+      v->gfsview = true;
+    }
+    else if (!strcmp (p.camera, "left"))
+      gl_axis_to_quat ((float[]){0,1,0}, - pi/2., v->quat);
+    else if (!strcmp (p.camera, "right"))
+      gl_axis_to_quat ((float[]){0,1,0}, pi/2., v->quat);
+    else if (!strcmp (p.camera, "top"))
+      gl_axis_to_quat ((float[]){1,0,0}, - pi/2., v->quat);
+    else if (!strcmp (p.camera, "bottom"))
+      gl_axis_to_quat ((float[]){1,0,0}, pi/2., v->quat);
+    else if (!strcmp (p.camera, "front"))
+      gl_axis_to_quat ((float[]){0,0,1}, 0., v->quat);
+    else if (!strcmp (p.camera, "back"))
+      gl_axis_to_quat ((float[]){0,1,0}, pi, v->quat);
+    else if (!strcmp (p.camera, "iso")) {
+      gl_axis_to_quat ((float[]){0,1,0}, pi/4., v->quat);
+      float q[4];
+      gl_axis_to_quat ((float[]){1,0,0}, - pi/4., q);
+      gl_add_quats(q, v->quat, v->quat);
+    }
+    else {
+      fprintf (qstderr(), "view(): unknown camera '%s'\n", p.camera);
+      exit (1);
+    }
+  }
+  else if (p.theta || p.phi || p.psi) {
+    v->gfsview = false;
+    float q[4];
+    gl_axis_to_quat ((float[]){1,0,0}, - p.phi, q);
+    if (p.relative) {
+      float q1[4];
+      gl_axis_to_quat ((float[]){0,1,0}, p.theta, q1);
+      gl_add_quats(q, q1, q1);
+      float q2[4];
+      gl_axis_to_quat ((float[]){0,0,1}, p.psi, q2);
+      gl_add_quats(q1, q2, q2);
+      gl_add_quats(q2, v->quat, v->quat);
+    }
+    else {
+      gl_axis_to_quat ((float[]){0,1,0}, p.theta, v->quat);
+      gl_add_quats(q, v->quat, v->quat);
+      gl_axis_to_quat ((float[]){0,0,1}, p.psi, q);
+      gl_add_quats(q, v->quat, v->quat);
+    }
+  }
+
+  if (p.map)
+    v->map = p.map;
+
+  if (p.p1x || p.p1y || p.p2x || p.p2y) {
+    float q[4];
+    gl_trackball(q, p.p1x, p.p1y, p.p2x, p.p2y);
+    gl_add_quats (q, v->quat, v->quat);
+  }
+
+  if (p.res)
+    v->res = p.res;
+
+  if ((p.width && p.width != v->width) ||
+      (p.height && p.height != v->height) ||
+      (p.samples && p.samples != v->samples)) {
+    v->width = v->width/v->samples;
+    v->height = v->height/v->samples;
+    if (p.width) v->width = p.width;
+    if (p.height) v->height = p.height;
+    if (p.samples) v->samples = p.samples;
+    v->width *= v->samples;
+    v->height *= v->samples;
+    framebuffer_destroy (v->fb);
+    v->fb = framebuffer_new (v->width, v->height);
+    init_gl();
+  }
+
+  clear();
+}
+
+
+
+
+
+
+
+struct _translate {
+  float x, y, z;
+};
+
+void begin_translate (struct _translate p)
+{
+  bview * view = draw();
+  glMatrixMode (GL_MODELVIEW);
+  glPushMatrix();
+  glTranslatef (p.x, p.y, p.z);
+  gl_get_frustum (&view->frustum);
+}
+
+void end_translate()
+{
+  bview * view = draw();
+  glMatrixMode (GL_MODELVIEW);
+  glPopMatrix();
+  gl_get_frustum (&view->frustum);
+}
+#line 224 "/home/vinlinux/basilisk/src/draw.h"
+struct _mirror {
+  coord n;
+  double alpha;
+};
+
+void begin_mirror (struct _mirror p)
+{
+  bview * view = draw();
+  glMatrixMode (GL_MODELVIEW);
+  glPushMatrix();
+  normalize (&p.n);
+  GLfloat s[16], t[16];
+  s[0] = 1. - 2.*p.n.x*p.n.x;
+  s[1] = - 2.*p.n.x*p.n.y; s[2] = - 2.*p.n.x*p.n.z;
+  s[3] = 0.;
+  s[4] = s[1];
+  s[5] = 1. - 2.*p.n.y*p.n.y; s[6] = - 2.*p.n.y*p.n.z;
+  s[7] = 0.;
+  s[8] = s[2]; s[9] = s[6]; s[10] = 1. - 2.*p.n.z*p.n.z;
+  s[11] = 0.;
+  s[12] = 0.; s[13] = 0.; s[14] = 0.;
+  s[15] = 1.;
+
+  t[0] = -1.; t[1] = 0.; t[2] = 0.; t[3] = 0.;
+  t[4] = 0.; t[5] = -1.; t[6] = 0.; t[7] = 0.;
+  t[8] = 0.; t[9] = 0.; t[10] = -1.; t[11] = 0.;
+  t[12] = - 2.*p.n.x*p.alpha;
+  t[13] = - 2.*p.n.y*p.alpha;
+  t[14] = - 2.*p.n.z*p.alpha;
+  t[15] = 1.;
+  matrix_multiply (s, t);
+  glMultMatrixf (s);
+  gl_get_frustum (&view->frustum);
+}
+
+void end_mirror() {
+  end_translate();
+}
+
+
+
+
+
+
+
+static void mapped_position (bview * view, coord * p, double * r)
+{
+  double x = p->x, y = p->y, z = p->z, rm = 0.;
+  view->map (p);
+  for (int i = -1; i <= 1; i += 2)
+    for (int j = -1; j <= 1; j += 2)
+      for (int k = -1; k <= 1; k += 2) {
+ coord q = {x + i**r, y + j**r, z + k**r};
+ view->map (&q);
+ double pq = sq(p->x - q.x) + sq(p->y - q.y) + sq(p->z - q.z);
+ if (pq > rm)
+   rm = pq;
+      }
+  *r = sqrt (rm);
+}
+
+#define foreach_visible(view)\
+foreach_cell() {\
+\
+\
+\
+  double _r = Delta*0.87;\
+\
+  coord _p = {x, y, z};\
+  if ((view)->map)\
+    mapped_position (view, &_p, &_r);\
+  if (!sphere_in_frustum (_p.x, _p.y, _p.z, _r, &(view)->frustum))\
+    continue;\
+  if (is_leaf(cell) ||\
+      sphere_diameter (_p.x, _p.y, _p.z, _r/L0, &(view)->frustum)\
+      < (view)->res) {\
+    if (is_active(cell) && is_local(cell)) {\
+
+#line 301
+
+#define end_foreach_visible()\
+    }\
+    continue;\
+  }\
+}\
+end_foreach_cell();\
+
+#line 308
+
+#line 319 "/home/vinlinux/basilisk/src/draw.h"
+#define foreach_visible_plane(view, n1, alpha1)\
+coord n = {(n1).x, (n1).y, (n1).z};\
+double _alpha = 0.9999999*(alpha1);\
+{\
+  double norm = sqrt(sq(n.x) + sq(n.y) + sq(n.z));\
+  if (!norm)\
+    n.z = 1.;\
+  else\
+    n.x /= norm, n.y /= norm, n.z /= norm, _alpha /= norm;\
+}\
+glNormal3d (n.x, n.y, n.z);\
+foreach_cell() {\
+\
+  double _r = Delta*0.87, alpha = (_alpha - n.x*x - n.y*y - n.z*z)/Delta;\
+  if (fabs(alpha) > 0.87 || !sphere_in_frustum (x, y, z, _r, &(view)->frustum))\
+    continue;\
+  if (is_leaf(cell) ||\
+      sphere_diameter (x, y, z, _r/L0, &(view)->frustum) < (view)->res) {\
+    if (is_active(cell) && is_local(cell)) {\
+
+#line 338
+
+#define end_foreach_visible_plane()\
+    }\
+    continue;\
+  }\
+}\
+end_foreach_cell();\
+
+#line 345
+
+
+
+static scalar lookup_field (const char * name)
+{
+  if (name)
+    if (all) for (scalar s = *all, *_i90 = all; ((scalar *)&s)->i >= 0; s = *++_i90)
+      if (!strcmp (_attribute[s.i].name, name))
+ return s;
+  return (scalar){-1};
+}
+
+static vector lookup_vector (const char * name)
+{
+  if (name) {
+    char component[strlen(name) + 3];
+    strcpy (component, name);
+    strcat (component, ".x");
+    if (all) for (scalar s = *all, *_i91 = all; ((scalar *)&s)->i >= 0; s = *++_i91)
+      if (!strcmp (_attribute[s.i].name, component))
+ return _attribute[s.i].v;
+  }
+  return (vector){{-1}};
+}
+
+static void draw_lines (bview * view, float color[3], float lw)
+{
+  glMatrixMode (GL_PROJECTION);
+  glPushMatrix();
+  glTranslatef (0., 0., view->lc*view->fov/24.);
+  glColor3f (color[0], color[1], color[2]);
+  glLineWidth (view->samples*(lw > 0. ? lw : 1.));
+}
+
+static inline double interp (Point point, coord p, scalar col) { int ig = 0; NOT_UNUSED(ig); int jg = 0; NOT_UNUSED(jg); int kg = 0; NOT_UNUSED(kg); POINT_VARIABLES; 
+#line 379 "/home/vinlinux/basilisk/src/draw.h"
+
+  struct _interpolate _r = { col, x + p.x*Delta, y + p.y*Delta, z + p.z*Delta };
+  return interpolate_linear (point, _r);
+}
+#line 439 "/home/vinlinux/basilisk/src/draw.h"
+static void begin_colorized (float fc[3],
+        double cmap[127][3], bool use_texture)
+{
+
+  if (use_texture) {
+    GLfloat texture[3*256];
+    for (int i = 0; i < 256; i++) {
+      color c = colormap_color (cmap, i/255., 0, 1);
+      texture[3*i] = c.r/255.;
+      texture[3*i + 1] = c.g/255.;
+      texture[3*i + 2] = c.b/255.;
+    }
+    glTexImage1D (GL_TEXTURE_1D, 0, GL_RGB, 256,0, GL_RGB, GL_FLOAT, texture);
+    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glEnable (GL_TEXTURE_1D);
+  }
+  glColor3f (fc[0], fc[1], fc[2]);
+}
+
+static void end_colorized() {
+  glDisable (GL_TEXTURE_1D);
+}
+#line 493 "/home/vinlinux/basilisk/src/draw.h"
+struct _draw_vof {
+  char * c;
+  char * s;
+  bool edges;
+  double larger;
+  int filled;
+
+  char * color;
+  double min, max, spread;
+  bool linear;
+  colormap map;
+  float fc[3], lc[3], lw;
+};
+
+
+
+
+
+
+
+static bool cfilter (Point point, scalar c, double cmin)
+{ int ig = 0; NOT_UNUSED(ig); int jg = 0; NOT_UNUSED(jg); int kg = 0; NOT_UNUSED(kg); POINT_VARIABLES; 
+#line 514 "/home/vinlinux/basilisk/src/draw.h"
+
+  double cmin1 = 4.*cmin;
+  if (val(c,0,0,0) <= cmin) {
+    {
+#line 517
+
+      if (val(c,1,0,0) >= 1. - cmin1 || val(c,-1,0,0) >= 1. - cmin1)
+ return true;
+#line 517
+
+      if (val(c,0,1,0) >= 1. - cmin1 || val(c,0,-1,0) >= 1. - cmin1)
+ return true;
+#line 517
+
+      if (val(c,0,0,1) >= 1. - cmin1 || val(c,0,0,-1) >= 1. - cmin1)
+ return true;}
+    return false;
+  }
+  if (val(c,0,0,0) >= 1. - cmin) {
+    {
+#line 523
+
+      if (val(c,1,0,0) <= cmin1 || val(c,-1,0,0) <= cmin1)
+ return true;
+#line 523
+
+      if (val(c,0,1,0) <= cmin1 || val(c,0,-1,0) <= cmin1)
+ return true;
+#line 523
+
+      if (val(c,0,0,1) <= cmin1 || val(c,0,0,-1) <= cmin1)
+ return true;}
+    return false;
+  }
+  int n = 0;
+  double min = HUGE, max = - HUGE;
+   { foreach_neighbor(1) {
+    if (val(c,0,0,0) > cmin && val(c,0,0,0) < 1. - cmin && ++n >= (1 << 3))
+      return true;
+    if (val(c,0,0,0) > max) max = val(c,0,0,0);
+    if (val(c,0,0,0) < min) min = val(c,0,0,0);
+  } end_foreach_neighbor(); }
+  return max - min > 0.5;
+}
+#line 550 "/home/vinlinux/basilisk/src/draw.h"
+static void glvertex3d (bview * view, double x, double y, double z) {
+  if (view->map) {
+    coord p = {x, y, z};
+    view->map (&p);
+    glVertex3d (p.x, p.y, p.z);
+  }
+  else
+    glVertex3d (x, y, z);
+}
+
+
+
+bool draw_vof (struct _draw_vof p)
+{ trace ("draw_vof", "/home/vinlinux/basilisk/src/draw.h", 563);
+  scalar c = lookup_field (p.c);
+  if (c.i < 0) {
+    fprintf (qstderr(), "draw_vof(): no field named '%s'\n", p.c);
+    { bool _ret =  false; end_trace("draw_vof", "/home/vinlinux/basilisk/src/draw.h", 567);  return _ret; }
+  }
+  vector s = lookup_vector (p.s);
+
+  scalar col = {-1}; if (p.color && strcmp (p.color, "level")) { col = lookup_field (p.color); if (col.i < 0) { fprintf (qstderr(), "colorize_args(): no field named '%s'\n", p.color); { bool _ret =  false; end_trace("draw_vof", "/home/vinlinux/basilisk/src/draw.h", 571);  return _ret; } } } double cmap[127][3]; if (p.color) { if (p.min == 0 && p.max == 0) { if (col.i < 0) p.min = 0, p.max = depth(); else { stats s = statsf (col); double avg = s.sum/s.volume; if (p.spread < 0.) p.min = s.min, p.max = s.max; else { double spread = (p.spread ? p.spread : 5.)*s.stddev; p.min = avg - spread; p.max = avg + spread; } } } if (!p.map) p.map = jet; p.map (cmap); } if ((3 > 2 || p.linear) && !p.fc[0] && !p.fc[1] && !p.fc[2]) p.fc[0] = p.fc[1] = p.fc[2] = 1.;;
+
+  double cmin = 1e-3;
+
+
+
+  if (_attribute[c.i].prolongation != fraction_refine) {
+    _attribute[c.i].prolongation = _attribute[c.i].refine = fraction_refine;
+    boundary (((scalar []){c,{-1}}));
+  }
+
+
+  bview * view = draw();
+#line 661 "/home/vinlinux/basilisk/src/draw.h"
+  double larger =
+    p.larger ? p.larger : p.edges || (p.color && !p.linear) ? 1. : 1.1;
+  { begin_colorized (p.fc, cmap, !view->vector && p.color && p.linear && col.i >= 0); {
+     { foreach_visible (view){
+
+#line 664 "/home/vinlinux/basilisk/src/draw.h"
+
+      if (cfilter (point, c, cmin)) {
+ coord n = facet_normal (point, c, s);
+ double alpha = plane_alpha (val(c,0,0,0), n);
+ coord v[12];
+ int m = facets (n, alpha, v, larger);
+ if (m > 2) {
+   if (p.color && (!p.linear || col.i < 0)) { color b = colormap_color (cmap, col.i < 0 ? (double) level : val(col,0,0,0), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); };
+   if (view->gfsview)
+     glNormal3d (- n.x, - n.y, - n.z);
+   else
+     glNormal3d (n.x, n.y, n.z);
+   glBegin (GL_POLYGON);
+   for (int i = 0; i < m; i++) {
+     if (p.color && p.linear && col.i >= 0) { if (view->vector) { color b = colormap_color (cmap, interp (point, v[i], col), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); } else { double _v = interp (point, v[i], col); glTexCoord1d (clamp(((_v) - p.min)/(p.max - p.min), 0., 1.)); } };
+     glvertex3d (view,
+   x + v[i].x*Delta, y + v[i].y*Delta, z + v[i].z*Delta);
+   }
+   glEnd ();
+   view->ni++;
+ }
+      } } end_foreach_visible(); }
+  } end_colorized(); }
+  if (p.edges) {
+    draw_lines (view, p.lc, p.lw);
+     { foreach_visible (view){
+
+#line 689 "/home/vinlinux/basilisk/src/draw.h"
+
+      if (cfilter (point, c, cmin)) {
+ coord n = facet_normal (point, c, s);
+ double alpha = plane_alpha (val(c,0,0,0), n);
+ coord v[12];
+ int m = facets (n, alpha, v, larger);
+ if (m > 2) {
+   glBegin (GL_LINE_LOOP);
+   for (int i = 0; i < m; i++)
+     glvertex3d (view,
+   x + v[i].x*Delta, y + v[i].y*Delta, z + v[i].z*Delta);
+   glEnd ();
+   view->ni++;
+ }
+      } } end_foreach_visible(); }
+    glPopMatrix ();
+  }
+
+
+  { bool _ret =  true; end_trace("draw_vof", "/home/vinlinux/basilisk/src/draw.h", 708);  return _ret; }
+ end_trace("draw_vof", "/home/vinlinux/basilisk/src/draw.h", 709); }
+#line 722 "/home/vinlinux/basilisk/src/draw.h"
+struct _cells {
+  coord n;
+  double alpha;
+  float lc[3], lw;
+};
+
+
+void cells (struct _cells p)
+{ trace ("cells", "/home/vinlinux/basilisk/src/draw.h", 730);
+  bview * view = draw();
+  draw_lines (view, p.lc, p.lw);
+#line 744 "/home/vinlinux/basilisk/src/draw.h"
+   { foreach_visible_plane (view, p.n, p.alpha){
+
+#line 744 "/home/vinlinux/basilisk/src/draw.h"
+ {
+    coord v[12];
+    int m = facets (n, alpha, v, 1.);
+    if (m > 2) {
+      glBegin (GL_LINE_LOOP);
+      for (int i = 0; i < m; i++)
+ glvertex3d (view, x + v[i].x*Delta, y + v[i].y*Delta, z + v[i].z*Delta);
+      glEnd ();
+      view->ni++;
+    }
+  } } end_foreach_visible_plane(); }
+
+  glPopMatrix ();
+ end_trace("cells", "/home/vinlinux/basilisk/src/draw.h", 757); }
+#line 774 "/home/vinlinux/basilisk/src/draw.h"
+struct _squares {
+  char * color;
+  double min, max, spread;
+  bool linear;
+  colormap map;
+  float fc[3], lc[3];
+
+  coord n;
+  double alpha;
+};
+
+
+bool squares (struct _squares p)
+{ trace ("squares", "/home/vinlinux/basilisk/src/draw.h", 787);
+  scalar col = {-1}; if (p.color && strcmp (p.color, "level")) { col = lookup_field (p.color); if (col.i < 0) { fprintf (qstderr(), "colorize_args(): no field named '%s'\n", p.color); { bool _ret =  false; end_trace("squares", "/home/vinlinux/basilisk/src/draw.h", 788);  return _ret; } } } double cmap[127][3]; if (p.color) { if (p.min == 0 && p.max == 0) { if (col.i < 0) p.min = 0, p.max = depth(); else { stats s = statsf (col); double avg = s.sum/s.volume; if (p.spread < 0.) p.min = s.min, p.max = s.max; else { double spread = (p.spread ? p.spread : 5.)*s.stddev; p.min = avg - spread; p.max = avg + spread; } } } if (!p.map) p.map = jet; p.map (cmap); } if ((3 > 2 || p.linear) && !p.fc[0] && !p.fc[1] && !p.fc[2]) p.fc[0] = p.fc[1] = p.fc[2] = 1.;;
+  scalar f = col;
+
+  bview * view = draw();
+  glShadeModel (GL_SMOOTH);
+  if (p.linear) {
+    { begin_colorized (p.fc, cmap, !view->vector && p.color && p.linear && col.i >= 0); {
+#line 817 "/home/vinlinux/basilisk/src/draw.h"
+       { foreach_visible_plane (view, p.n, p.alpha){
+
+#line 817 "/home/vinlinux/basilisk/src/draw.h"
+
+ if (val(f,0,0,0) != nodata) {
+   coord v[12];
+   int m = facets (n, alpha, v, 1.);
+   if (m > 2) {
+     coord c = {0,0,0};
+     for (int i = 0; i < m; i++)
+       {
+#line 824
+
+  c.x += v[i].x/m;
+#line 824
+
+  c.y += v[i].y/m;
+#line 824
+
+  c.z += v[i].z/m;}
+     glBegin (GL_TRIANGLE_FAN);
+     if (p.color && p.linear && col.i >= 0) { if (view->vector) { color b = colormap_color (cmap, interp (point, c, f), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); } else { double _v = interp (point, c, f); glTexCoord1d (clamp(((_v) - p.min)/(p.max - p.min), 0., 1.)); } };
+     glvertex3d (view, x + c.x*Delta, y + c.y*Delta, z + c.z*Delta);
+     for (int i = 0; i < m; i++) {
+       if (p.color && p.linear && col.i >= 0) { if (view->vector) { color b = colormap_color (cmap, interp (point, v[i], f), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); } else { double _v = interp (point, v[i], f); glTexCoord1d (clamp(((_v) - p.min)/(p.max - p.min), 0., 1.)); } };
+       glvertex3d (view,
+     x + v[i].x*Delta, y + v[i].y*Delta, z + v[i].z*Delta);
+     }
+     if (p.color && p.linear && col.i >= 0) { if (view->vector) { color b = colormap_color (cmap, interp (point, v[0], f), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); } else { double _v = interp (point, v[0], f); glTexCoord1d (clamp(((_v) - p.min)/(p.max - p.min), 0., 1.)); } };
+     glvertex3d (view,
+   x + v[0].x*Delta, y + v[0].y*Delta, z + v[0].z*Delta);
+     glEnd ();
+     view->ni++;
+   }
+ } } end_foreach_visible_plane(); }
+
+    } end_colorized(); }
+  }
+  else {
+#line 858 "/home/vinlinux/basilisk/src/draw.h"
+     { foreach_visible_plane (view, p.n, p.alpha){
+
+#line 858 "/home/vinlinux/basilisk/src/draw.h"
+
+      if (val(f,0,0,0) != nodata) {
+ coord v[12];
+ int m = facets (n, alpha, v, 1.);
+ if (m > 2) {
+   if (p.color && (!p.linear || col.i < 0)) { color b = colormap_color (cmap, col.i < 0 ? (double) level : val(col,0,0,0), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); };
+   glBegin (GL_POLYGON);
+   for (int i = 0; i < m; i++)
+     glvertex3d (view,
+   x + v[i].x*Delta, y + v[i].y*Delta, z + v[i].z*Delta);
+   glEnd ();
+   view->ni++;
+ }
+      } } end_foreach_visible_plane(); }
+
+  }
+  { bool _ret =  true; end_trace("squares", "/home/vinlinux/basilisk/src/draw.h", 874);  return _ret; }
+ end_trace("squares", "/home/vinlinux/basilisk/src/draw.h", 875); }
+#line 886 "/home/vinlinux/basilisk/src/draw.h"
+struct _box {
+  bool notics;
+  float lc[3], lw;
+};
+
+
+bool box (struct _box p)
+{ trace ("box", "/home/vinlinux/basilisk/src/draw.h", 893);
+  bview * view = draw();
+  draw_lines (view, p.lc, p.lw);
+
+  float height = 0.5*gl_StrokeHeight();
+  float width = gl_StrokeWidth ('1'), scale = L0/(60.*width), length;
+  float Z1 = 3 == 2 ? 0. : Z0;
+  char label[80];
+
+  glMatrixMode (GL_MODELVIEW);
+
+  if (!p.notics) {
+    int nt = 8;
+    for (int i = 0; i <= nt; i++) {
+      glPushMatrix();
+      glTranslatef (X0 + i*L0/nt - height/2.*scale, Y0 - width/3.*scale, Z1);
+      glRotatef (-90, 0, 0, 1);
+      glScalef (scale, scale, scale);
+      sprintf (label, "%g", X0 + i*L0/nt);
+      gl_StrokeString (label);
+      glPopMatrix();
+
+      glPushMatrix();
+      sprintf (label, "%g", Y0 + i*L0/nt);
+      length = gl_StrokeLength (label);
+      glTranslatef (X0 - (length + width/3.)*scale,
+      Y0 + i*L0/nt - height/2.*scale, Z1);
+      glScalef (scale, scale, scale);
+      gl_StrokeString (label);
+      glPopMatrix();
+
+
+      glPushMatrix();
+      sprintf (label, "%g", Z0 + i*L0/nt);
+      length = gl_StrokeLength (label);
+      glTranslatef (X0 - (length + width/3.)*scale,
+      Y0, Z0 + i*L0/nt + height/2.*scale);
+      glRotatef (-90, 1, 0, 0);
+      glScalef (scale, scale, scale);
+      gl_StrokeString (label);
+      glPopMatrix();
+
+    }
+
+    glPushMatrix();
+    sprintf (label, "%g", X0 + L0/2.);
+    length = gl_StrokeLength (label);
+    glTranslatef (X0 + L0/2 - height*scale, Y0 - (length + 4.*width)*scale, Z1);
+    glScalef (2.*scale, 2.*scale, 2.*scale);
+    gl_StrokeString ("X");
+    glPopMatrix();
+
+
+    glPushMatrix();
+    sprintf (label, "%g", Y0 + L0/2.);
+    length = gl_StrokeLength (label);
+    glTranslatef (X0 - (length + 4.*width)*scale,
+    Y0 + L0/2. - height*scale, Z1);
+    glScalef (2.*scale, 2.*scale, 2.*scale);
+    gl_StrokeString ("Y");
+    glPopMatrix();
+
+
+    glPushMatrix();
+    sprintf (label, "%g", Z0 + L0/2.);
+    length = gl_StrokeLength (label);
+    glTranslatef (X0 - (length + 4.*width)*scale,
+    Y0, Z0 + L0/2. + height*scale);
+    glRotatef (-90, 1, 0, 0);
+    glScalef (2.*scale, 2.*scale, 2.*scale);
+    gl_StrokeString ("Z");
+    glPopMatrix();
+
+  }
+#line 979 "/home/vinlinux/basilisk/src/draw.h"
+   { foreach_level (0){
+
+#line 979 "/home/vinlinux/basilisk/src/draw.h"
+ {
+    for (int i = -1; i <= 1; i += 2) {
+      glBegin (GL_LINE_LOOP);
+      glvertex3d (view, x - Delta/2., y - Delta/2., z + i*Delta/2.);
+      glvertex3d (view, x + Delta/2., y - Delta/2., z + i*Delta/2.);
+      glvertex3d (view, x + Delta/2., y + Delta/2., z + i*Delta/2.);
+      glvertex3d (view, x - Delta/2., y + Delta/2., z + i*Delta/2.);
+      glEnd ();
+      view->ni++;
+      glBegin (GL_LINES);
+      for (int j = -1; j <= 1; j += 2) {
+ glvertex3d (view, x + i*Delta/2., y + j*Delta/2., z - Delta/2.);
+ glvertex3d (view, x + i*Delta/2., y + j*Delta/2., z + Delta/2.);
+      }
+      glEnd ();
+      view->ni++;
+    }
+  } } end_foreach_level(); }
+
+
+  glMatrixMode (GL_PROJECTION);
+  glPopMatrix();
+  { bool _ret =  true; end_trace("box", "/home/vinlinux/basilisk/src/draw.h", 1001);  return _ret; }
+ end_trace("box", "/home/vinlinux/basilisk/src/draw.h", 1002); }
+#line 1014 "/home/vinlinux/basilisk/src/draw.h"
+struct _isosurface {
+  char * f;
+  double v;
+
+  char * color;
+  double min, max, spread;
+  bool linear;
+  colormap map;
+  float fc[3], lc[3];
+};
+
+
+bool isosurface (struct _isosurface p)
+{ trace ("isosurface", "/home/vinlinux/basilisk/src/draw.h", 1027);
+
+  scalar f = lookup_field (p.f);
+  if (f.i < 0) {
+    fprintf (qstderr(), "isosurface(): no field named '%s'\n", p.f);
+    { bool _ret =  false; end_trace("isosurface", "/home/vinlinux/basilisk/src/draw.h", 1032);  return _ret; }
+  }
+
+  scalar col = {-1}; if (p.color && strcmp (p.color, "level")) { col = lookup_field (p.color); if (col.i < 0) { fprintf (qstderr(), "colorize_args(): no field named '%s'\n", p.color); { bool _ret =  false; end_trace("isosurface", "/home/vinlinux/basilisk/src/draw.h", 1035);  return _ret; } } } double cmap[127][3]; if (p.color) { if (p.min == 0 && p.max == 0) { if (col.i < 0) p.min = 0, p.max = depth(); else { stats s = statsf (col); double avg = s.sum/s.volume; if (p.spread < 0.) p.min = s.min, p.max = s.max; else { double spread = (p.spread ? p.spread : 5.)*s.stddev; p.min = avg - spread; p.max = avg + spread; } } } if (!p.map) p.map = jet; p.map (cmap); } if ((3 > 2 || p.linear) && !p.fc[0] && !p.fc[1] && !p.fc[2]) p.fc[0] = p.fc[1] = p.fc[2] = 1.;;
+
+  scalar v= new_vertex_scalar("v");
+   { foreach_vertex(){
+
+#line 1038 "/home/vinlinux/basilisk/src/draw.h"
+
+    val(v,0,0,0) = (val(f,0,0,0) + val(f,-1,0,0) + val(f,0,-1,0) + val(f,-1,-1,0) +
+    val(f,0,0,-1) + val(f,-1,0,-1) + val(f,0,-1,-1) + val(f,-1,-1,-1))/8.; } end_foreach_vertex(); }
+
+  vector n= new_vector("n");
+   { foreach(){
+
+#line 1043 "/home/vinlinux/basilisk/src/draw.h"
+
+    {
+#line 1044
+
+      val(n.x,0,0,0) = (val(f,1,0,0) - val(f,-1,0,0))/(2.*Delta);
+#line 1044
+
+      val(n.y,0,0,0) = (val(f,0,1,0) - val(f,0,-1,0))/(2.*Delta);
+#line 1044
+
+      val(n.z,0,0,0) = (val(f,0,0,1) - val(f,0,0,-1))/(2.*Delta);}; } end_foreach(); }
+  boundary ((scalar *)((vector []){{n.x,n.y,n.z},{{-1},{-1},{-1}}}));
+
+  bview * view = draw();
+  glShadeModel (GL_SMOOTH);
+  { begin_colorized (p.fc, cmap, !view->vector && p.color && p.linear && col.i >= 0); {
+     { foreach_visible (view){
+
+#line 1051 "/home/vinlinux/basilisk/src/draw.h"
+ {
+      double val[8] = {
+ val(v,0,0,0), val(v,1,0,0), val(v,1,0,1), val(v,0,0,1),
+ val(v,0,1,0), val(v,1,1,0), val(v,1,1,1), val(v,0,1,1)
+      };
+      double t[5][3][3];
+      int nt = polygonize (val, p.v, t);
+      for (int i = 0; i < nt; i++) {
+ if (p.color && (!p.linear || col.i < 0)) { color b = colormap_color (cmap, col.i < 0 ? (double) level : val(col,0,0,0), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); };
+ glBegin (GL_POLYGON);
+ for (int j = 0; j < 3; j++) {
+   coord v = {t[i][j][0], t[i][j][1], t[i][j][2]}, np;
+   {
+#line 1063
+
+     np.x = interp (point, v, n.x);
+#line 1063
+
+     np.y = interp (point, v, n.y);
+#line 1063
+
+     np.z = interp (point, v, n.z);}
+   glNormal3d (np.x, np.y, np.z);
+   if (p.color && p.linear && col.i >= 0) { if (view->vector) { color b = colormap_color (cmap, interp (point, v, col), p.min, p.max); glColor3f (_attribute[b.i].r/255., _attribute[b.i].g/255., _attribute[b.i].b/255.); } else { double _v = interp (point, v, col); glTexCoord1d (clamp(((_v) - p.min)/(p.max - p.min), 0., 1.)); } };
+   glvertex3d (view, x + v.x*Delta, y + v.y*Delta, z + v.z*Delta);
+ }
+ glEnd ();
+ view->ni++;
+      }
+    } } end_foreach_visible(); }
+  } end_colorized(); }
+
+  { bool _ret =  true; delete (((scalar []){n.x,n.y,n.z,v,{-1}}));  end_trace("isosurface", "/home/vinlinux/basilisk/src/draw.h", 1075);  return _ret; }
+ delete (((scalar []){n.x,n.y,n.z,v,{-1}}));  end_trace("isosurface", "/home/vinlinux/basilisk/src/draw.h", 1076); }
+#line 1086 "/home/vinlinux/basilisk/src/draw.h"
+struct _travelling {
+  double start, end;
+  float tx, ty, quat[4], fov;
+};
+
+
+
+
+void travelling (struct _travelling p)
+{
+  static float tx, ty, quat[4], fov;
+  static double told = -1.;
+  if (told < p.start && t >= p.start) {
+    bview * view = get_view();
+    tx = view->tx, ty = view->ty, fov = view->fov;
+    for (int i = 0; i < 4; i++)
+      quat[i] = view->quat[i];
+  }
+  if (t >= p.start && t <= p.end)
+    view ((struct _view_set){.tx = (!p.tx ? tx : ((t - p.start)*(p.tx) + (p.end - t)*(tx))/(p.end - p.start)), .ty = (!p.ty ? ty : ((t - p.start)*(p.ty) + (p.end - t)*(ty))/(p.end - p.start)),
+   .fov = (!p.fov ? fov : ((t - p.start)*(p.fov) + (p.end - t)*(fov))/(p.end - p.start)),
+   .quat = {(!p.quat[0] ? quat[0] : ((t - p.start)*(p.quat[0]) + (p.end - t)*(quat[0]))/(p.end - p.start)), (!p.quat[1] ? quat[1] : ((t - p.start)*(p.quat[1]) + (p.end - t)*(quat[1]))/(p.end - p.start)),
+           (!p.quat[2] ? quat[2] : ((t - p.start)*(p.quat[2]) + (p.end - t)*(quat[2]))/(p.end - p.start)), (!p.quat[3] ? quat[3] : ((t - p.start)*(p.quat[3]) + (p.end - t)*(quat[3]))/(p.end - p.start))}});
+  if (told < p.end && t >= p.end) {
+    bview * view = get_view();
+    tx = view->tx, ty = view->ty, fov = view->fov;
+    for (int i = 0; i < 4; i++)
+      quat[i] = view->quat[i];
+  }
+  told = t;
+}
+#line 1133 "/home/vinlinux/basilisk/src/draw.h"
+struct _draw_string {
+  char * str;
+  int pos;
+  float size;
+  float lc[3], lw;
+};
+
+
+bool draw_string (struct _draw_string p)
+{ trace ("draw_string", "/home/vinlinux/basilisk/src/draw.h", 1142);
+  bview * view = draw();
+
+  glMatrixMode (GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+
+  glMatrixMode (GL_MODELVIEW);
+  glPushMatrix();
+  glLoadIdentity();
+
+  glColor3f (p.lc[0], p.lc[1], p.lc[2]);
+  glLineWidth (view->samples*(p.lw > 0. ? p.lw : 1.));
+
+  float width = gl_StrokeWidth ('1'), height = gl_StrokeHeight();
+  if (!p.size)
+    p.size = 40;
+  float hscale = 2./(p.size*width), vscale = hscale*view->width/view->height;
+  float vmargin = width/2.*vscale;
+  if (p.pos == 0)
+    glTranslatef (-1., -1. + vmargin, 0.);
+  else if (p.pos == 1)
+    glTranslatef (-1., 1. - height*vscale, 0.);
+  else if (p.pos == 2)
+    glTranslatef (1. - strlen(p.str)*width*hscale, 1. - height*vscale, 0.);
+  else
+    glTranslatef (1. - strlen(p.str)*width*hscale, -1. + vmargin, 0.);
+  glScalef (hscale, vscale, 1.);
+  gl_StrokeString (p.str);
+
+  glMatrixMode (GL_MODELVIEW);
+  glPopMatrix();
+  glMatrixMode (GL_PROJECTION);
+  glPopMatrix();
+
+  { bool _ret =  true; end_trace("draw_string", "/home/vinlinux/basilisk/src/draw.h", 1177);  return _ret; }
+ end_trace("draw_string", "/home/vinlinux/basilisk/src/draw.h", 1178); }
+#line 340 "/home/vinlinux/basilisk/src/view.h"
+#line 360 "/home/vinlinux/basilisk/src/view.h"
+struct _load {
+  FILE * fp;
+  char * file;
+  Array * buf;
+  Array * history;
+};
+
+bool load (struct _load p);
+#line 411 "/home/vinlinux/basilisk/src/view.h"
+struct _save {
+  char * file, * format, * opt;
+  FILE * fp;
+  float lw;
+  int sort, options;
+
+  Array * history;
+  bview * view;
+};
+
+static void bview_draw (bview * view)
+{
+  if (!view->active)
+    return;
+  view->active = false;
+  glFinish ();
+  enable_fpe (FE_DIVBYZERO|FE_INVALID);
+}
+
+static void redraw_feedback (struct _save * p)
+{
+  bview * view = p->view ? p->view : get_view();
+  assert (p->history);
+  if (p->history->len) {
+    float res = view->res;
+    view->res = 0.;
+    view->vector = true;
+    redraw();
+
+
+    int list = glGenLists (1);
+    glNewList (list, GL_COMPILE);
+    load ((struct _load){.buf = p->history});
+    glEndList();
+    glCallList (list);
+    glFinish ();
+    glDeleteLists (list, 1);
+    enable_fpe (FE_DIVBYZERO|FE_INVALID);
+    view->active = false;
+    view->vector = false;
+    view->res = res;
+  }
+}
+
+
+
+
+bool save (struct _save p)
+{ trace ("save", "/home/vinlinux/basilisk/src/view.h", 459);
+  char ppm[] = "ppm";
+  if (!p.format) {
+    p.format = ppm;
+    if (p.file) {
+      char * s = strchr (p.file, '.'), * dot = s;
+      while (s) {
+ dot = s;
+ s = strchr (s + 1, '.');
+      }
+      if (dot)
+ p.format = dot + 1;
+    }
+  }
+
+  bview * view = p.view ? p.view : get_view();
+
+  if (!strcmp (p.format, "png") ||
+      !strcmp (p.format, "jpg") ||
+      (p.file && is_animation (p.file))) {
+    bview_draw (view);
+    unsigned char * image = (unsigned char *) compose_image (view);
+    if (pid() == 0) {
+      FILE * fp = open_image (p.file, p.opt);
+      gl_write_image (fp, image, view->width, view->height, view->samples);
+      close_image (p.file, fp);
+    }
+    { bool _ret =  true; end_trace("save", "/home/vinlinux/basilisk/src/view.h", 486);  return _ret; }
+  }
+
+  if (p.file && (p.fp = fopen (p.file, "w")) == NULL) {
+    perror (p.file);
+    { bool _ret =  false; end_trace("save", "/home/vinlinux/basilisk/src/view.h", 491);  return _ret; }
+  }
+  if (!p.fp)
+    p.fp = qstdout();
+
+  if (!strcmp (p.format, "ppm")) {
+    bview_draw (view);
+    unsigned char * image = (unsigned char *) compose_image (view);
+    if (pid() == 0)
+      gl_write_image (p.fp, image, view->width, view->height, view->samples);
+  }
+
+  else if (!strcmp (p.format, "bv")) {
+    assert (p.history);
+    fprintf (p.fp,
+      "view (fov = %g, quat = {%g,%g,%g,%g}, "
+      "tx = %g, ty = %g, "
+      "bg = {%g,%g,%g}, "
+      "width = %d, height = %d, samples = %d"
+      ");\n",
+      view->fov,
+      view->quat[0], view->quat[1], view->quat[2], view->quat[3],
+      view->tx, view->ty,
+      view->bg[0], view->bg[1], view->bg[2],
+      view->width/view->samples, view->height/view->samples,
+      view->samples);
+    fwrite (p.history->p, 1, p.history->len, p.fp);
+  }
+
+  else if (!strcmp (p.format, "gnu") ||
+    !strcmp (p.format, "obj") ||
+    !strcmp (p.format, "kml")) {
+    int format = (!strcmp (p.format, "gnu") ? FEEDBACK_GNU :
+    !strcmp (p.format, "obj") ? FEEDBACK_OBJ :
+    !strcmp (p.format, "kml") ? FEEDBACK_KML :
+    -1);
+    unsigned buffsize = 1 << 24;
+    bool done = false;
+    while (!done && buffsize <= (1 << 28)) {
+      float * f = gl_feedback_begin (buffsize);
+      redraw_feedback (&p);
+      done = gl_feedback_end (f, p.fp, format);
+      buffsize *= 2;
+    }
+    if (!done)
+      fprintf (ferr, "save(): error: exceeded maximum feedback buffer size\n");
+  }
+
+  else if (!strcmp (p.format, "ps") ||
+    !strcmp (p.format, "eps") ||
+    !strcmp (p.format, "tex") ||
+    !strcmp (p.format, "pdf") ||
+    !strcmp (p.format, "svg") ||
+    !strcmp (p.format, "pgf")) {
+    GLint format = (!strcmp (p.format, "ps") ? GL2PS_PS :
+      !strcmp (p.format, "eps") ? GL2PS_EPS :
+      !strcmp (p.format, "tex") ? GL2PS_TEX :
+      !strcmp (p.format, "pdf") ? GL2PS_PDF :
+      !strcmp (p.format, "svg") ? GL2PS_SVG :
+      !strcmp (p.format, "pgf") ? GL2PS_PGF :
+      -1);
+    GLint state = GL2PS_OVERFLOW;
+    GLint sort = p.sort ? p.sort : GL2PS_SIMPLE_SORT;
+    GLint options = p.options ? p.options : (GL2PS_SIMPLE_LINE_OFFSET |
+          GL2PS_SILENT |
+          GL2PS_BEST_ROOT |
+          GL2PS_OCCLUSION_CULL |
+          GL2PS_USE_CURRENT_VIEWPORT |
+          GL2PS_TIGHT_BOUNDING_BOX);
+    unsigned buffsize = 1 << 24;
+    while (state == GL2PS_OVERFLOW && buffsize <= (1 << 28)) {
+      gl2psBeginPage ("", "bview",
+        NULL,
+        format, sort, options,
+        GL_RGBA, 0, NULL,
+        0, 0, 0,
+        buffsize, p.fp, "");
+      redraw_feedback (&p);
+      disable_fpe (FE_DIVBYZERO|FE_INVALID);
+      state = gl2psEndPage();
+      enable_fpe (FE_DIVBYZERO|FE_INVALID);
+      buffsize *= 2;
+    }
+    if (state == GL2PS_OVERFLOW)
+      fprintf (ferr, "save(): error: exceeded maximum feedback buffer size\n");
+  }
+
+  else {
+    fprintf (ferr, "save(): unknown format '%s'\n", p.format);
+    if (p.file) {
+      fclose (p.fp);
+      remove (p.file);
+    }
+    { bool _ret =  false; end_trace("save", "/home/vinlinux/basilisk/src/view.h", 584);  return _ret; }
+  }
+
+  fflush (p.fp);
+  if (p.file)
+    fclose (p.fp);
+
+  { bool _ret =  true; end_trace("save", "/home/vinlinux/basilisk/src/view.h", 591);  return _ret; }
+ end_trace("save", "/home/vinlinux/basilisk/src/view.h", 592); }
+
+
+
+
+
+
+
+static char * remove_blanks (char * line)
+{
+  while (strchr (" \t", *line)) line++;
+  char * s = line, * cur = line;
+  bool instring = false;
+  while (*s != '\0' && *s != '#') {
+    if (*s == '"')
+      instring = !instring;
+    if (instring || !strchr (" \t", *s))
+      *cur++ = *s;
+    s++;
+  }
+  *cur = '\0';
+  return line;
+}
+
+static void fields_stats()
+{
+  fprintf (ferr, "# t = %g, fields = {", t);
+  if (all) for (scalar s = *all, *_i92 = all; ((scalar *)&s)->i >= 0; s = *++_i92)
+    fprintf (ferr, " %s", _attribute[s.i].name);
+  fputs (" }\n", ferr);
+  fprintf (ferr, "# %12s: %12s %12s %12s %12s\n",
+    "name", "min", "avg", "stddev", "max");
+  if (all) for (scalar s = *all, *_i93 = all; ((scalar *)&s)->i >= 0; s = *++_i93) {
+    stats ss = statsf (s);
+    fprintf (ferr, "# %12s: %12g %12g %12g %12g\n",
+      _attribute[s.i].name, ss.min, ss.sum/ss.volume, ss.stddev, ss.max);
+  }
+}
+
+static void draw_append (char * buf, Array * history, FILE * interactive)
+{
+  if (interactive) {
+    if (history->len)
+      load ((struct _load){.buf = history});
+    save ((struct _save){.fp = interactive});
+  }
+  array_append (history, buf, strlen(buf)*sizeof(char));
+}
+
+
+
+
+
+
+#line 1 "draw_get.h"
+#line 1 "/home/vinlinux/basilisk/src/draw_get.h"
+
+
+bool _view_set_get (struct _view_set * p) {
+  Params params[] = {
+    {"tx", pfloat, &p->tx},
+    {"ty", pfloat, &p->ty},
+    {"fov", pfloat, &p->fov},
+    {"quat", pfloat, p->quat, 4},
+    {"sx", pfloat, &p->sx},
+    {"sy", pfloat, &p->sy},
+    {"sz", pfloat, &p->sz},
+    {"width", punsigned, &p->width},
+    {"height", punsigned, &p->height},
+    {"samples", punsigned, &p->samples},
+    {"bg", pfloat, p->bg, 3},
+    {"theta", pfloat, &p->theta},
+    {"phi", pfloat, &p->phi},
+    {"psi", pfloat, &p->psi},
+    {"relative", pbool, &p->relative},
+    {"res", pfloat, &p->res},
+    {"camera", pstring, &p->camera},
+    {"p1x", pfloat, &p->p1x},
+    {"p1y", pfloat, &p->p1y},
+    {"p2x", pfloat, &p->p2x},
+    {"p2y", pfloat, &p->p2y},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _translate_get (struct _translate * p) {
+  Params params[] = {
+    {"x", pfloat, &p->x},
+    {"y", pfloat, &p->y},
+    {"z", pfloat, &p->z},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _mirror_get (struct _mirror * p) {
+  Params params[] = {
+    {"n", pdouble, &p->n, 3},
+    {"alpha", pdouble, &p->alpha},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _draw_vof_get (struct _draw_vof * p) {
+  Params params[] = {
+    {"c", pstring, &p->c},
+    {"s", pstring, &p->s},
+    {"edges", pbool, &p->edges},
+    {"larger", pdouble, &p->larger},
+    {"filled", pint, &p->filled},
+    {"color", pstring, &p->color},
+    {"min", pdouble, &p->min},
+    {"max", pdouble, &p->max},
+    {"spread", pdouble, &p->spread},
+    {"linear", pbool, &p->linear},
+    {"fc", pfloat, p->fc, 3},
+    {"lc", pfloat, p->lc, 3},
+    {"lw", pfloat, &p->lw},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _cells_get (struct _cells * p) {
+  Params params[] = {
+    {"n", pdouble, &p->n, 3},
+    {"alpha", pdouble, &p->alpha},
+    {"lc", pfloat, p->lc, 3},
+    {"lw", pfloat, &p->lw},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _squares_get (struct _squares * p) {
+  Params params[] = {
+    {"color", pstring, &p->color},
+    {"min", pdouble, &p->min},
+    {"max", pdouble, &p->max},
+    {"spread", pdouble, &p->spread},
+    {"linear", pbool, &p->linear},
+    {"fc", pfloat, p->fc, 3},
+    {"lc", pfloat, p->lc, 3},
+    {"n", pdouble, &p->n, 3},
+    {"alpha", pdouble, &p->alpha},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _box_get (struct _box * p) {
+  Params params[] = {
+    {"notics", pbool, &p->notics},
+    {"lc", pfloat, p->lc, 3},
+    {"lw", pfloat, &p->lw},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _isosurface_get (struct _isosurface * p) {
+  Params params[] = {
+    {"f", pstring, &p->f},
+    {"v", pdouble, &p->v},
+    {"color", pstring, &p->color},
+    {"min", pdouble, &p->min},
+    {"max", pdouble, &p->max},
+    {"spread", pdouble, &p->spread},
+    {"linear", pbool, &p->linear},
+    {"fc", pfloat, p->fc, 3},
+    {"lc", pfloat, p->lc, 3},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _travelling_get (struct _travelling * p) {
+  Params params[] = {
+    {"start", pdouble, &p->start},
+    {"end", pdouble, &p->end},
+    {"tx", pfloat, &p->tx},
+    {"ty", pfloat, &p->ty},
+    {"quat", pfloat, p->quat, 4},
+    {"fov", pfloat, &p->fov},
+    {NULL}
+  };
+  return parse_params (params);
+}
+
+bool _draw_string_get (struct _draw_string * p) {
+  Params params[] = {
+    {"str", pstring, &p->str},
+    {"pos", pint, &p->pos},
+    {"size", pfloat, &p->size},
+    {"lc", pfloat, p->lc, 3},
+    {"lw", pfloat, &p->lw},
+    {NULL}
+  };
+  return parse_params (params);
+}
+#line 647 "/home/vinlinux/basilisk/src/view.h"
+
+static bool process_line (char * line, Array * history, FILE * interactive)
+{
+  if (line[0] == '\0')
+    return true;
+  char * buf = pstrdup (line,__func__,__FILE__,__LINE__);
+  char * s = strtok (remove_blanks (line), "(");
+  if (!s) {
+    pfree (buf,__func__,__FILE__,__LINE__);
+    return true;
+  }
+
+  if (!strcmp (s, "restore")) {
+    char * file = NULL;
+    parse_params ((Params[]){{"file", pstring, &file}, {NULL}});
+    if (file) {
+      if (!restore ((struct Dump){.file = file, .list = all}))
+ fprintf (ferr, "could not restore from '%s'\n", file);
+      else {
+ restriction (all);
+ fields_stats();
+ clear();
+
+ if (history->len && load ((struct _load){.buf = history}) && interactive)
+   save ((struct _save){.fp = interactive});
+      }
+    }
+  }
+
+  else if (!strcmp (s, "dump")) {
+    char * file = NULL;
+    parse_params ((Params[]){{"file", pstring, &file}, {NULL}});
+    dump ((struct Dump){.file = file});
+  }
+
+  else if (!strcmp (s, "input_gfs")) {
+    char * file = NULL;
+    parse_params ((Params[]){{"file", pstring, &file}, {NULL}});
+    if (file) {
+      input_gfs ((struct OutputGfs){.file = file, .list = all});
+      restriction (all);
+      fields_stats();
+      clear();
+
+      if (history->len && load ((struct _load){.buf = history}) && interactive)
+ save ((struct _save){.fp = interactive});
+    }
+  }
+
+  else if (!strcmp (s, "save")) {
+    char * file = NULL;
+    parse_params ((Params[]){{"file", pstring, &file}, {NULL}});
+    if (file)
+      save ((struct _save){.file = file, .history = history});
+  }
+
+  else if (!strcmp (s, "load")) {
+    char * file = NULL;
+    parse_params ((Params[]){{"file", pstring, &file}, {NULL}});
+    if (file && load ((struct _load){.file = file, .history = history}) && interactive) {
+      load ((struct _load){.buf = history});
+      save ((struct _save){.fp = interactive});
+    }
+  }
+
+  else if (!strcmp (s, "cells")) {
+    struct _cells p = {{0}};
+    _cells_get (&p);
+    cells (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "draw_vof")) {
+    struct _draw_vof p = {0};
+    _draw_vof_get (&p);
+    if (draw_vof (p))
+      draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "squares")) {
+    struct _squares p = {0};
+    _squares_get (&p);
+    squares (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "begin_translate")) {
+    struct _translate p = {0};
+    _translate_get (&p);
+    begin_translate (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "end_translate")) {
+    end_translate();
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "begin_mirror")) {
+    struct _mirror p = {{0}};
+    _mirror_get (&p);
+    begin_mirror (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "end_mirror")) {
+    end_mirror();
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "squares")) {
+    struct _squares p = {0};
+    _squares_get (&p);
+    squares (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "isosurface")) {
+    struct _isosurface p = {0};
+    _isosurface_get (&p);
+    isosurface (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "draw_string")) {
+    struct _draw_string p = {0};
+    _draw_string_get (&p);
+    draw_string (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "display")) {
+    if (interactive && history->len && load ((struct _load){.buf = history}))
+      save ((struct _save){.fp = interactive});
+  }
+
+  else if (!strcmp (s, "clear")) {
+    clear();
+    if (interactive)
+      save ((struct _save){.fp = interactive});
+    history->len = 0;
+  }
+
+  else if (!strcmp (s, "show")) {
+    if (interactive && history->len)
+      save ((struct _save){.fp = ferr, .format = "bv", .history = history});
+  }
+
+  else if (!strcmp (s, "box")) {
+    struct _box p = {0};
+    _box_get (&p);
+    box (p);
+    draw_append (buf, history, interactive);
+  }
+
+  else if (!strcmp (s, "view")) {
+    struct _view_set p = {0};
+    _view_set_get (&p);
+    view (p);
+    if (p.width || p.height || p.samples) {
+
+      if (history->len && load ((struct _load){.buf = history}) && p.samples && interactive)
+ save ((struct _save){.fp = interactive});
+    }
+  }
+
+  else if (!strcmp (s, "quit")) {
+    pfree (buf,__func__,__FILE__,__LINE__);
+    return false;
+  }
+
+  else if (s[0] != '\n')
+    fprintf (ferr, "load(): syntax error: '%s'\n", s);
+
+  pfree (buf,__func__,__FILE__,__LINE__);
+  return true;
+}
+
+bool load (struct _load p) {
+  if (p.file) {
+    p.fp = fopen (p.file, "r");
+    if (!p.fp) {
+      perror (p.file);
+      return false;
+    }
+  }
+
+  Array * history = array_new();
+  if (p.fp) {
+    char line[256];
+    while (fgets (line, 256, p.fp) && process_line (line, history, NULL));
+  }
+  else if (p.buf) {
+    int i = 0;
+    char * s = (char *) p.buf->p;
+    while (i < p.buf->len) {
+      char * start = s;
+      while (i < p.buf->len && *s != '\n')
+ s++, i++;
+      if (*s == '\n' && ++s > start) {
+ char line[s - start + 1];
+ strncpy (line, start, s - start);
+ line[s - start] = '\0';
+ process_line (line, history, NULL);
+      }
+    }
+  }
+  if (p.history)
+    array_append (p.history, history->p, history->len);
+  array_free (history);
+
+  return true;
+}
+#line 2 "./diagnostics.h"
+
+#line 1 "lambda2.h"
+#line 1 "/home/vinlinux/basilisk/src/lambda2.h"
+static void eigsrt (double d[3],
+      double v[3][3])
+{
+  int k, j, i;
+  double p;
+
+  for (i = 0; i < 3 - 1; i++) {
+    p = d[k = i];
+
+    for (j = i + 1; j < 3; j++)
+      if (d[j] >= p)
+ p = d[k = j];
+    if (k != i) {
+      d[k] = d[i];
+      d[i] = p;
+      for (j = 0; j < 3; j++) {
+ p = v[j][i];
+ v[j][i] = v[j][k];
+ v[j][k] = p;
+      }
+    }
+  }
+}
+#line 37 "/home/vinlinux/basilisk/src/lambda2.h"
+void eigenvalues (double a[3][3],
+    double d[3],
+    double v[3][3])
+{
+  int j, iq, ip, i;
+  double tresh, theta, tau, t, sm, s, h, g, c, b[3], z[3];
+
+  for (ip = 0; ip < 3; ip++) {
+    for (iq = 0; iq < 3; iq++)
+      v[ip][iq] = 0.0;
+    v[ip][ip] = 1.0;
+  }
+
+  for (ip = 0; ip < 3; ip++) {
+    b[ip] = d[ip] = a[ip][ip];
+    z[ip] = 0.0;
+  }
+
+  for (i = 1; i <= 50; i++) {
+    sm = 0.0;
+    for (ip = 0; ip < 3 - 1; ip++) {
+      for (iq = ip + 1; iq < 3; iq++)
+ sm += fabs (a[ip][iq]);
+    }
+    if (sm == 0.0) {
+      eigsrt (d, v);
+      return;
+    }
+    if (i < 4)
+      tresh = 0.2*sm/(3*3);
+    else
+      tresh = 0.0;
+    for (ip = 0; ip < 3 - 1; ip++) {
+      for (iq = ip + 1; iq < 3; iq++) {
+ g = 100.0*fabs (a[ip][iq]);
+ if (i > 4 && fabs(d[ip]) + g == fabs(d[ip]) &&
+     fabs(d[iq]) + g == fabs(d[iq]))
+   a[ip][iq] = 0.0;
+ else if (fabs (a[ip][iq]) > tresh) {
+   h = d[iq] - d[ip];
+   if (fabs(h) + g == fabs(h))
+     t = a[ip][iq]/h;
+   else {
+     theta = 0.5*h/a[ip][iq];
+     t = 1.0/(fabs (theta) + sqrt (1.0 + theta*theta));
+     if (theta < 0.0) t = -t;
+   }
+   c = 1.0/sqrt (1 + t*t);
+   s = t*c;
+   tau = s/(1.0 + c);
+   h = t*a[ip][iq];
+   z[ip] -= h;
+   z[iq] += h;
+   d[ip] -= h;
+   d[iq] += h;
+   a[ip][iq] = 0.0;
+   for (j = 0; j <= ip - 1; j++)
+     { g=a[j][ip];h=a[j][iq];a[j][ip]=g-s*(h+g*tau);a[j][iq]=h+s*(g-h*tau);};
+   for (j = ip + 1; j <= iq - 1; j++)
+     { g=a[ip][j];h=a[j][iq];a[ip][j]=g-s*(h+g*tau);a[j][iq]=h+s*(g-h*tau);};
+   for (j = iq + 1; j < 3; j++)
+     { g=a[ip][j];h=a[iq][j];a[ip][j]=g-s*(h+g*tau);a[iq][j]=h+s*(g-h*tau);};
+   for (j = 0; j < 3; j++)
+     { g=v[j][ip];h=v[j][iq];v[j][ip]=g-s*(h+g*tau);v[j][iq]=h+s*(g-h*tau);};
+ }
+      }
+    }
+    for (ip = 0; ip < 3; ip++) {
+      b[ip] += z[ip];
+      d[ip] = b[ip];
+      z[ip] = 0.0;
+    }
+  }
+
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++)
+      fprintf (qstderr(), "%10.3g ", a[i][j]);
+    fprintf (qstderr(), "\n");
+  }
+  assert (false);
+}
+
+void lambda2 (const vector u, scalar l2)
+{
+   { foreach(){
+
+#line 121 "/home/vinlinux/basilisk/src/lambda2.h"
+ {
+    double JJ[3][3];
+    scalar s = u.x;
+    int i = 0;
+    {
+#line 125
+
+      JJ[0][i++] = (val(s,1,0,0) - val(s,-1,0,0))/(2.*Delta);
+#line 125
+
+      JJ[0][i++] = (val(s,0,1,0) - val(s,0,-1,0))/(2.*Delta);
+#line 125
+
+      JJ[0][i++] = (val(s,0,0,1) - val(s,0,0,-1))/(2.*Delta);}
+    s = u.y; i = 0;
+    {
+#line 128
+
+      JJ[1][i++] = (val(s,1,0,0) - val(s,-1,0,0))/(2.*Delta);
+#line 128
+
+      JJ[1][i++] = (val(s,0,1,0) - val(s,0,-1,0))/(2.*Delta);
+#line 128
+
+      JJ[1][i++] = (val(s,0,0,1) - val(s,0,0,-1))/(2.*Delta);}
+    s = u.z; i = 0;
+    {
+#line 131
+
+      JJ[2][i++] = (val(s,1,0,0) - val(s,-1,0,0))/(2.*Delta);
+#line 131
+
+      JJ[2][i++] = (val(s,0,1,0) - val(s,0,-1,0))/(2.*Delta);
+#line 131
+
+      JJ[2][i++] = (val(s,0,0,1) - val(s,0,0,-1))/(2.*Delta);}
+    double S2O2[3][3];
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++) {
+ S2O2[i][j] = 0.;
+ for (int k = 0; k < 3; k++)
+   S2O2[i][j] += JJ[i][k]*JJ[k][j] + JJ[k][i]*JJ[j][k];
+      }
+    double lambda[3], ev[3][3];
+    eigenvalues (S2O2, lambda, ev);
+    val(l2,0,0,0) = lambda[1]/2.;
+  } } end_foreach(); }
+  boundary (((scalar []){l2,{-1}}));
+}
+#line 4 "./diagnostics.h"
+#line 1 "profile5b.h"
+#line 1 "/home/vinlinux/basilisk/src/profile5b.h"
+#line 19 "/home/vinlinux/basilisk/src/profile5b.h"
+struct prof {
+  scalar * list;
+  char * fname;
+  double ym;
+  double h;
+  double rf;
+  FILE * fp;
+};
+
+void profile(struct prof p){
+
+
+
+  if(!p.list)
+    p.list=all;
+  if (!p.ym)
+    p.ym=Y0;
+  if (!p.h)
+    p.h=Y0+L0;
+  if (!p.rf)
+    p.rf=1;
+  if (!p.fname && !p.fp)
+    p.fp=qstdout();
+
+  int len = list_len(p.list);
+  boundary(p.list);
+  FILE * fp = p.fp;
+  char * file = p.fname;
+
+
+
+  if (pid()==0){
+    if (file && (fp = fopen (file, "w")) == NULL) {
+      perror (file);
+      exit (1);
+    }
+    assert (fp);
+
+
+
+    fprintf(fp,"y\t");
+    if (p.list) for (scalar s = *p.list, *_i94 = p.list; ((scalar *)&s)->i >= 0; s = *++_i94)
+      fprintf(fp,"%s\t",_attribute[s.i].name);
+    fprintf(fp,"\n");
+  }
+
+  double yp = p.ym;
+  double aver[len];
+
+
+
+  while (yp<=p.h){
+    for (int i=0;i<len;i++)
+      aver[i]=0.;
+    int m=0;
+    double a=0;
+     { 
+#undef OMP_PARALLEL
+#define OMP_PARALLEL()
+OMP(omp parallel) {
+double _a = a; double _m = m; 
+#line 75
+foreach(){
+
+#line 75 "/home/vinlinux/basilisk/src/profile5b.h"
+{
+      if ((fabs(y-yp)<=(Delta/2))){
+ _m++;
+ int k = 0;
+
+
+
+
+
+ _a+=sq(Delta);
+ if (p.list) for (scalar s = *p.list, *_i95 = p.list; ((scalar *)&s)->i >= 0; s = *++_i95)
+   aver[k++] += point.level >= 0 ? interpolate ((struct _interpolate){s, x, yp,z})*sq(Delta) : 0;
+
+      }
+    } } end_foreach();OMP(omp critical) a += _a;
+mpi_all_reduce_double (a, MPI_SUM);
+OMP(omp critical) m += _m;
+mpi_all_reduce_double (m, MPI_SUM);
+
+#undef OMP_PARALLEL
+#define OMP_PARALLEL() OMP(omp parallel)
+}
+#line 89
+ }
+
+
+
+
+
+
+      int k = 0;
+      if (p.list) for (scalar s = *p.list, *_i96 = p.list; ((scalar *)&s)->i >= 0; s = *++_i96){
+ if (k ==0)
+   fprintf(fp,"%g\t%g",yp,aver[k]/a);
+ if (k > 0)
+   fprintf(fp,"\t%g",aver[k]/a);
+ k++;
+ if (k == len)
+   fprintf(fp,"\n");
+      }
+#line 117 "/home/vinlinux/basilisk/src/profile5b.h"
+    yp += p.rf*sqrt(a/(double)m);
+
+  }
+  if (pid()==0)
+    fflush(fp);
+}
+#line 5 "./diagnostics.h"
+
+double vphi, stheta;
+scalar T_ave= {23};
+struct sDiag dia;
+
+struct sDiag {
+ double Ekin;
+ double EkinOld;
+ double WdoneOld;
+ double rotVol;
+ double bE;
+ double bEold;
+};
+
+struct sOutput {
+ double dtVisual;
+ double dtProfiles;
+};
+
+struct sOutput out = {.dtVisual=100., .dtProfiles=100.};
+
+static int init_0_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (i = 0);   *ip = i; *tp = t;   return ret; } static int init_0 (const int i, const double t, Event * _ev) { trace ("init_0", "./diagnostics.h", 26); {
+ vphi = -M_PI/6.;
+ stheta = 0.;
+ end_trace("init_0", "./diagnostics.h", 29); } return 0; } 
+#line 39 "./diagnostics.h"
+static int diagnostics_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (t+=0.2);   *ip = i; *tp = t;   return ret; } static int diagnostics (const int i, const double t, Event * _ev) { trace ("diagnostics", "./diagnostics.h", 39); {
+ int n = 0.;
+ scalar ekin= new_scalar("ekin");
+ double tempVol = 0.;
+ double tempEkin = 0.;
+ double max_vel = 0.;
+ double bEnergy = 0.;
+
+  { 
+#undef OMP_PARALLEL
+#define OMP_PARALLEL()
+OMP(omp parallel) {
+double _n = n; double _tempVol = tempVol; double _tempEkin = tempEkin; double _max_vel = max_vel; double _bEnergy = bEnergy; 
+#line 47
+
+if (!is_constant(cm) && !is_constant(rho)) {
+#undef val_cm
+#define val_cm(a,i,j,k) val(a,i,j,k)
+#undef fine_cm
+#define fine_cm(a,i,j,k) fine(a,i,j,k)
+#undef coarse_cm
+#define coarse_cm(a,i,j,k) coarse(a,i,j,k)
+#undef val_rho
+#define val_rho(a,i,j,k) val(a,i,j,k)
+#undef fine_rho
+#define fine_rho(a,i,j,k) fine(a,i,j,k)
+#undef coarse_rho
+#define coarse_rho(a,i,j,k) coarse(a,i,j,k)
+#line 47
+foreach(){
+
+#line 48 "./diagnostics.h"
+ {
+  _tempVol += (cube(Delta)*val_cm(cm,0,0,0))*val(fan,0,0,0);
+  _bEnergy += (cube(Delta)*val_cm(cm,0,0,0))*y*(val(b,0,0,0) - (9.81*y/273.));
+
+
+
+
+
+   val(ekin,0,0,0) = 0.5*val_rho(rho,0,0,0)*cube(Delta)*(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0)));
+
+  _tempEkin += val(ekin,0,0,0);
+  _max_vel = max(_max_vel, sqrt(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0))));
+  _n++;
+ } } end_foreach(); }
+if (is_constant(cm) && !is_constant(rho)) {
+const double _const_cm = _constant[cm.i -_NVARMAX];
+NOT_UNUSED(_const_cm);
+#undef val_cm
+#define val_cm(a,i,j,k) _const_cm
+#undef fine_cm
+#define fine_cm(a,i,j,k) _const_cm
+#undef coarse_cm
+#define coarse_cm(a,i,j,k) _const_cm
+#undef val_rho
+#define val_rho(a,i,j,k) val(a,i,j,k)
+#undef fine_rho
+#define fine_rho(a,i,j,k) fine(a,i,j,k)
+#undef coarse_rho
+#define coarse_rho(a,i,j,k) coarse(a,i,j,k)
+#line 47
+foreach(){
+
+#line 48 "./diagnostics.h"
+ {
+  _tempVol += (cube(Delta)*val_cm(cm,0,0,0))*val(fan,0,0,0);
+  _bEnergy += (cube(Delta)*val_cm(cm,0,0,0))*y*(val(b,0,0,0) - (9.81*y/273.));
+
+
+
+
+
+   val(ekin,0,0,0) = 0.5*val_rho(rho,0,0,0)*cube(Delta)*(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0)));
+
+  _tempEkin += val(ekin,0,0,0);
+  _max_vel = max(_max_vel, sqrt(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0))));
+  _n++;
+ } } end_foreach(); }
+if (!is_constant(cm) && is_constant(rho)) {
+#undef val_cm
+#define val_cm(a,i,j,k) val(a,i,j,k)
+#undef fine_cm
+#define fine_cm(a,i,j,k) fine(a,i,j,k)
+#undef coarse_cm
+#define coarse_cm(a,i,j,k) coarse(a,i,j,k)
+const double _const_rho = _constant[rho.i -_NVARMAX];
+NOT_UNUSED(_const_rho);
+#undef val_rho
+#define val_rho(a,i,j,k) _const_rho
+#undef fine_rho
+#define fine_rho(a,i,j,k) _const_rho
+#undef coarse_rho
+#define coarse_rho(a,i,j,k) _const_rho
+#line 47
+foreach(){
+
+#line 48 "./diagnostics.h"
+ {
+  _tempVol += (cube(Delta)*val_cm(cm,0,0,0))*val(fan,0,0,0);
+  _bEnergy += (cube(Delta)*val_cm(cm,0,0,0))*y*(val(b,0,0,0) - (9.81*y/273.));
+
+
+
+
+
+   val(ekin,0,0,0) = 0.5*val_rho(rho,0,0,0)*cube(Delta)*(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0)));
+
+  _tempEkin += val(ekin,0,0,0);
+  _max_vel = max(_max_vel, sqrt(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0))));
+  _n++;
+ } } end_foreach(); }
+if (is_constant(cm) && is_constant(rho)) {
+const double _const_cm = _constant[cm.i -_NVARMAX];
+NOT_UNUSED(_const_cm);
+#undef val_cm
+#define val_cm(a,i,j,k) _const_cm
+#undef fine_cm
+#define fine_cm(a,i,j,k) _const_cm
+#undef coarse_cm
+#define coarse_cm(a,i,j,k) _const_cm
+const double _const_rho = _constant[rho.i -_NVARMAX];
+NOT_UNUSED(_const_rho);
+#undef val_rho
+#define val_rho(a,i,j,k) _const_rho
+#undef fine_rho
+#define fine_rho(a,i,j,k) _const_rho
+#undef coarse_rho
+#define coarse_rho(a,i,j,k) _const_rho
+#line 47
+foreach(){
+
+#line 48 "./diagnostics.h"
+ {
+  _tempVol += (cube(Delta)*val_cm(cm,0,0,0))*val(fan,0,0,0);
+  _bEnergy += (cube(Delta)*val_cm(cm,0,0,0))*y*(val(b,0,0,0) - (9.81*y/273.));
+
+
+
+
+
+   val(ekin,0,0,0) = 0.5*val_rho(rho,0,0,0)*cube(Delta)*(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0)));
+
+  _tempEkin += val(ekin,0,0,0);
+  _max_vel = max(_max_vel, sqrt(sq(val(u.x,0,0,0)) + sq(val(u.y,0,0,0)) + sq(val(u.z,0,0,0))));
+  _n++;
+ } } end_foreach(); }OMP(omp critical) n += _n;
+mpi_all_reduce_double (n, MPI_SUM);
+OMP(omp critical) tempVol += _tempVol;
+mpi_all_reduce_double (tempVol, MPI_SUM);
+OMP(omp critical) tempEkin += _tempEkin;
+mpi_all_reduce_double (tempEkin, MPI_SUM);
+OMP(omp critical) if (_max_vel > max_vel) max_vel = _max_vel;
+mpi_all_reduce_double (max_vel, MPI_MAX);
+OMP(omp critical) bEnergy += _bEnergy;
+mpi_all_reduce_double (bEnergy, MPI_SUM);
+
+#undef OMP_PARALLEL
+#define OMP_PARALLEL() OMP(omp parallel)
+}
+#line 61
+ }
+ dia.bE = 1.*bEnergy;
+ dia.rotVol = 1.*tempVol;
+ dia.Ekin = 1.*tempEkin;
+
+ if(fabs(dia.rotVol/rot.V - 1) > 0.01){
+  printf("ERROR Check fan volume, V=%g, Vr=%g\n",rot.V, dia.rotVol);
+ }
+
+ static FILE * fpout =NULL; if (!fpout || i == 0) fpout = pid() > 0 ? fopen("/dev/null", "w") :  fopen("./results/output","w");
+ static FILE * fpca =NULL; if (!fpca || i == 0) fpca = pid() > 0 ? fopen("/dev/null", "w") :  fopen("./results/case","w");
+
+ if(t==0.){
+  fprintf(fpca,"L0\n %g\n",L0);
+
+  fprintf(fpca,"r\tW\tP\tmaxlvl\tminlvl\teps\n%g\t%g\t%g\t%d\t%d\t%g\n",
+    rot.R, rot.W, rot.P, maxlevel, minlevel, eps);
+
+  fprintf(fpout,"i\tt\tn\tred\tEkin\tWork\tbE\n");
+ }
+ fprintf(fpout, "%d\t%g\t%d\t%g\t%g\t%g\t%g\n",
+  i,t,n,(double)((1<<(maxlevel*3))/n),dia.Ekin,rot.Work, dia.bE);
+ printf("%d\t%g\t%g\t%g\t%g\n",n,(double)((1<<(maxlevel*3))/n),dia.Ekin,rot.Work,dia.bE);
+
+ dia.EkinOld = 1.*dia.Ekin;
+ dia.WdoneOld = 1.*rot.Work;
+ dia.bEold = 1.*dia.bE;
+ delete (((scalar []){ekin,{-1}}));  end_trace("diagnostics", "./diagnostics.h", 88); } return 0; } 
+#line 111 "./diagnostics.h"
+static int movies_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (t += out.dtVisual);   *ip = i; *tp = t;   return ret; } static int movies (const int i, const double t, Event * _ev) { trace ("movies", "./diagnostics.h", 111);  {
+    scalar bdiff= new_scalar("bdiff");
+
+     { foreach(){
+
+#line 114 "./diagnostics.h"
+{
+ val(bdiff,0,0,0) = val(b,0,0,0) - (9.81*y/273.);
+    } } end_foreach(); }
+
+    boundary(((scalar []){bdiff,{-1}}));
+#line 127 "./diagnostics.h"
+    if(vphi < -M_PI/12.){
+        vphi += M_PI/(12*70);
+    }
+
+    clear();
+    view((struct _view_set){.fov=15, .tx = 0., .ty = 0.2});
+    view((struct _view_set){.theta= -stheta+M_PI/2., .phi = 0., .width = 1000, .height = 1000});
+    { begin_translate((struct _translate){-rot.x0,-rot.y0,-rot.z0}); {
+
+    cells((struct _cells){.n = {1.,0.,0.}, .alpha = rot.x0});
+
+
+
+
+    double rn[3] = {cos(stheta), 0, sin(stheta)};
+    double fac = 0.*L0;
+    double alp = rn[0]*(rot.x0 + fac*rn[0]) + rn[1]*(rot.y0 + fac*rn[1]) + rn[2]*(rot.z0 + fac*rn[2]);
+    draw_vof((struct _draw_vof){"fan", .fc = {1,0,0}});
+    squares((struct _squares){"bdiff", .n = {rn[0],rn[1],rn[2]}, .alpha = alp, .min = 0., .max = .036});
+    } end_translate(); }
+    save((struct _save){"./results/visual_3d.mp4"});
+#line 166 "./diagnostics.h"
+ delete (((scalar []){bdiff,{-1}}));  end_trace("movies", "./diagnostics.h", 166); } return 0; } 
+#line 13 "main.c"
 
 
 int main() { _init_solver();
@@ -16315,7 +18983,7 @@ int main() { _init_solver();
  free_solver(); }
 
 
-static int init_0_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (t = 0);   *ip = i; *tp = t;   return ret; } static int init_0 (const int i, const double t, Event * _ev) { trace ("init_0", "main.c", 42); {
+static int init_1_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (t = 0);   *ip = i; *tp = t;   return ret; } static int init_1 (const int i, const double t, Event * _ev) { trace ("init_1", "main.c", 42); {
  init_physics();
  init_rotor();
  _attribute[fan.i].prolongation=fraction_refine;
@@ -16324,7 +18992,7 @@ static int init_0_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; dou
 #line 46 "main.c"
  if (val(fan,0,0,0) > 0. && level < maxlevel) { refine_cell (point, all, 0, &((Tree *)grid)->refined); refined++; continue; } } end_foreach_leaf(); } mpi_all_reduce (refined, MPI_INT, MPI_SUM); if (refined) { mpi_boundary_refine (all); mpi_boundary_update (all); } } while (refined); } while(0);
  eps = min(meps, 0.1*rot.cu);
- end_trace("init_0", "main.c", 48); } return 0; } 
+ end_trace("init_1", "main.c", 48); } return 0; } 
 
 static int init_change_expr0 (int * ip, double * tp, Event * _ev) {  int i = *ip; double t = *tp;  int ret = (i=10);   *ip = i; *tp = t;   return ret; } static int init_change (const int i, const double t, Event * _ev) { trace ("init_change", "main.c", 50); {
  TOLERANCE=10E-3;
@@ -22172,7 +24840,7 @@ static double _boundary11 (Point point, Point neighbor, scalar _s) { int ig = ne
 return  neumann((9.81*y/273.)); return 0.; } static double _boundary11_homogeneous (Point point, Point neighbor, scalar _s) { int ig = neighbor.i - point.i;  if (ig == 0) ig = _attribute[_s.i].d.x;  NOT_UNUSED(ig); int jg = neighbor.j - point.j;  if (jg == 0) jg = _attribute[_s.i].d.y;  NOT_UNUSED(jg); int kg = neighbor.k - point.k;  if (kg == 0) kg = _attribute[_s.i].d.z;  NOT_UNUSED(kg); POINT_VARIABLES; 
 #line 22 "./physics.h"
 return  neumann_homogeneous(); return 0.; }
-size_t datasize = 23*sizeof (double);
+size_t datasize = 24*sizeof (double);
 static int defaults (const int i, const double t, Event * _ev);
 static int defaults_expr0 (int * ip, double * tp, Event * _ev);
 static int init (const int i, const double t, Event * _ev);
@@ -22222,6 +24890,12 @@ static int rotate (const int i, const double t, Event * _ev);
 static int rotate_expr0 (int * ip, double * tp, Event * _ev);
 static int init_0 (const int i, const double t, Event * _ev);
 static int init_0_expr0 (int * ip, double * tp, Event * _ev);
+static int diagnostics (const int i, const double t, Event * _ev);
+static int diagnostics_expr0 (int * ip, double * tp, Event * _ev);
+static int movies (const int i, const double t, Event * _ev);
+static int movies_expr0 (int * ip, double * tp, Event * _ev);
+static int init_1 (const int i, const double t, Event * _ev);
+static int init_1_expr0 (int * ip, double * tp, Event * _ev);
 static int init_change (const int i, const double t, Event * _ev);
 static int init_change_expr0 (int * ip, double * tp, Event * _ev);
 static int adapt_0 (const int i, const double t, Event * _ev);
@@ -22249,6 +24923,8 @@ void _init_solver (void) {
   event_register ((Event){ 0, 1, init, {init_expr0}, ((int *)0), ((double *)0),
     "/home/vinlinux/basilisk/src/navier-stokes/centered.h", 139, "init"});
   event_register ((Event){ 0, 1, init_0, {init_0_expr0}, ((int *)0), ((double *)0),
+    "./diagnostics.h", 26, "init"});
+  event_register ((Event){ 0, 1, init_1, {init_1_expr0}, ((int *)0), ((double *)0),
     "main.c", 42, "init"});
   event_register ((Event){ 0, 1, Eddyvis, {Eddyvis_expr0}, ((int *)0), ((double *)0),
     "/home/vinlinux/basilisk/src/SGS.h", 57, "Eddyvis"});
@@ -22256,6 +24932,10 @@ void _init_solver (void) {
     "./fan.h", 70, "forcing"});
   event_register ((Event){ 0, 1, rotate, {rotate_expr0}, ((int *)0), ((double *)0),
     "./fan.h", 76, "rotate"});
+  event_register ((Event){ 0, 1, diagnostics, {diagnostics_expr0}, ((int *)0), ((double *)0),
+    "./diagnostics.h", 39, "diagnostics"});
+  event_register ((Event){ 0, 1, movies, {movies_expr0}, ((int *)0), ((double *)0),
+    "./diagnostics.h", 111, "movies"});
   event_register ((Event){ 0, 1, init_change, {init_change_expr0}, ((int *)0), ((double *)0),
     "main.c", 50, "init_change"});
   event_register ((Event){ 0, 2, end, {end_expr0, end_expr1}, ((int *)0), ((double *)0),
@@ -22295,12 +24975,13 @@ void _init_solver (void) {
   event_register ((Event){ 0, 1, adapt_0, {adapt_0_expr0}, ((int *)0), ((double *)0),
     "main.c", 56, "adapt"});
   _attribute = (_Attributes *) pcalloc (datasize/sizeof(double), sizeof (_Attributes), __func__, __FILE__, __LINE__);
-  all = (scalar *) pmalloc (sizeof (scalar)*24,__func__, __FILE__, __LINE__);
-  for (int i = 0; i < 23; i++)
+  all = (scalar *) pmalloc (sizeof (scalar)*25,__func__, __FILE__, __LINE__);
+  for (int i = 0; i < 24; i++)
     all[i].i = i;
-  all[23].i = -1;
+  all[24].i = -1;
   set_fpe();
   octree_methods();
+  init_scalar ((scalar){23}, "T_ave");
   init_scalar ((scalar){22}, "fan");
   init_face_vector ((vector){{19},{20},{21}}, "av");
   init_scalar ((scalar){18}, "b");
