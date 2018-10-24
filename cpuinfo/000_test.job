@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=32
+#SBATCH --partition inf
+#SBATCH --time=300
+#SBATCH --mem=1G
+#SBATCH --job-name 000_test
+#SBATCH --output %x.o%j
+#SBATCH --error %x.e%j
+
+lscpu

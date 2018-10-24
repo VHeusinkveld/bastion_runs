@@ -3,10 +3,10 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=8
 #SBATCH --partition small
-#SBATCH --time=300
-#SBATCH --mem=1G
+#SBATCH --time=7200
+#SBATCH --mem=2G
 #SBATCH --job-name 000_test
-#SBATCH --output %x.o%j
-#SBATCH --error %x.e%j
+#SBATCH --output results/%x.o%j
+#SBATCH --error results/%x.e%j
 
 ./main
