@@ -36,7 +36,7 @@ struct sbViewSettings {
 };
 
 /** Initialize structures */
-struct sOutput out = {.dtVisual=0.2, .dtSlices=10., .dtProfile=1., .startBave=20., .dir="results"};
+struct sOutput out = {.dtVisual=1, .dtSlices=10., .dtProfile=10., .startBave=20., .dir="results"};
 struct sbViewSettings bvsets = {.phi=0., .theta=0., .sphi=0., .stheta=0.};
 
 event init(i = 0){
@@ -169,7 +169,7 @@ event movies(t += out.dtVisual) {
 
     /** Save file with certain fps*/
     char nameVid1[80];
-    snprintf(nameVid1, 80, "ppm2mp4 -r %g ./%s/visual_3d.mp4", 1./out.dtVisual, out.dir);
+    snprintf(nameVid1, 80, "ppm2mp4 -r %d ./%s/visual_3d.mp4", 10, out.dir);
     save(nameVid1);
 }
 

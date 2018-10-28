@@ -9,4 +9,4 @@
 #SBATCH --output results/%x.o%j
 #SBATCH --error results/%x.e%j
 
-./main_not
+./main001
