@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --ntasks=8
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --partition small
+#SBATCH --time=3600
+#SBATCH --mem=2G
+#SBATCH --job-name 003_small
+#SBATCH --output results/%x.o%j
+#SBATCH --error results/%x.e%j
+
+./main003
