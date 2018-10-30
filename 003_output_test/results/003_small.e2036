@@ -1,0 +1,5 @@
+ERROR Check fan volume, V=3.61716, Vr=0
+n	red	Ekin	Work	bE	turbVol	dissipation
+262144	64	-nan	0	0	0	0
+i=0 t=0 p=0 u=0 b=0 
+slurmstepd: error: *** JOB 2036 ON cirrus-3 CANCELLED AT 2018-10-30T14:47:23 ***
