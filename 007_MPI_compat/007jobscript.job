@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --partition inf
+#SBATCH --time=36000
+#SBATCH --mem=5G
+#SBATCH --job-name 007_inf_MPI
+#SBATCH --output results/%x.o%j
+#SBATCH --error results/%x.e%j
+
+mpirun -np 4 main007

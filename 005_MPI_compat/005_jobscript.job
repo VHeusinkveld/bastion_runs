@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --ntasks=8
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --partition inf
+#SBATCH --time=36000
+#SBATCH --mem=2G
+#SBATCH --job-name 005_inf_OMP
+#SBATCH --output results/%x.o%j
+#SBATCH --error results/%x.e%j
+
+OMP_NUM_THREADS=8 ./main005
