@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --ntasks=16
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=16
+#SBATCH --partition inf
+#SBATCH --time=36000
+#SBATCH --mem=6G
+#SBATCH --job-name 009_inf_MPI
+#SBATCH --output results/%x.o%j
+#SBATCH --error results/%x.e%j
+
+mpirun -np 16 main009
