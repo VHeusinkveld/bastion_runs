@@ -73,5 +73,5 @@ event progress(t+=2.) {
 	fprintf(stderr, "i=%d t=%g p=%d u=%d b=%d \n", i, t, mgp.i, mgu.i, mgb.i);
 }
 
-event end(t=600){
+event end(t=1200){
 }
