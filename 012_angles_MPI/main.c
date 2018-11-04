@@ -21,7 +21,7 @@ char sim_ID[] = "angles";
 
 /* Initialisation */
 int main() {
-	for(rot.phi = 30.*M_PI/180.; rot.phi >= -90.*M_PI/180.; rot.phi -= 15.*M_PI/180.){
+	for(rot.phi = 15.*M_PI/180.; rot.phi > -90*M_PI/180; rot.phi -= 15*M_PI/180){
     	init_grid(2<<5);
    	L0 = 100.;
    	X0 = Y0 = Z0 = 0.;
@@ -38,7 +38,7 @@ int main() {
 	b.gradient = minmod2; // Flux limiter 
 
   	minlevel = 3; 
-  	maxlevel = 8;
+  	maxlevel = 9;
   	meps = 10.;
 	DT = 10E-5;
         TOLERANCE=10E-6;
@@ -56,7 +56,7 @@ event init(t = 0){
 	init_rotor();
 	fan.prolongation=fraction_refine;
 	refine (fan[] > 0. && level < maxlevel);
-	eps = min(meps, 0.085*rot.cu);
+	eps = min(meps, 0.07*rot.cu);
 }
 
 event init_change(i=10){

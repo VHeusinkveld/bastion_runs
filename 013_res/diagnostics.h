@@ -44,7 +44,7 @@ struct sbViewSettings {
 };
 
 /** Initialize structures */
-struct sOutput out = {.dtDiag = 0.5, .dtVisual=10., .dtSlices=5., .dtProfile=5., .startAve=0., .dtAve = 30., .main_dir="results", .sim_i=0};
+struct sOutput out = {.dtDiag = 0.5, .dtVisual=1., .dtSlices=85., .dtProfile=5., .startAve=0., .dtAve = 30., .main_dir="results", .sim_i=0};
 struct sbViewSettings bvsets = {.phi=0., .theta=0., .sphi=0., .stheta=0.};
 
 double dissipation(Point point, vector u);
@@ -116,8 +116,8 @@ event diagnostics (t+=out.dtDiag){
 	static FILE * fpca = fopen(nameCase, "w");
 
 	if(t==0.){
-		fprintf(fpca,"L0\tinversion\txr\tyr\tzr\ttheta\tphi\tr\tW\tP\tmaxlvl\tminlvl\teps\n%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%d\t%d\t%g\n", 
-				L0, INVERSION, rot.x0, rot.y0, rot.z0, rot.theta, rot.phi, rot.R, rot.W, rot.P, maxlevel, minlevel, eps);
+		fprintf(fpca,"L0\tinversion\txr\tyr\tzr\ttheta\tphi\tr\tW\tP\tcu\tmaxlvl\tminlvl\teps\n%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%d\t%d\t%g\n", 
+				L0, INVERSION, rot.x0, rot.y0, rot.z0, rot.theta, rot.phi, rot.R, rot.W, rot.P, rot.cu, maxlevel, minlevel, eps);
 		
 	        fprintf(stderr,"n\tred\tEkin\tWork\tbE\tturbVol\tdissipation\n");
 		fprintf(fpout,"i\tt\tn\tred\tEkin\tWork\tbE\tturbVol\tdissipation\n");

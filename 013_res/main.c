@@ -13,16 +13,17 @@
 int minlevel, maxlevel;         // Grid depths
 double meps, eps;		// Maximum error and error in u fields
 
-char sim_ID[] = "angles";
+char sim_ID[] = "resolutions";
 
 #include "physics.h"
 #include "fan.h"
 #include "diagnostics.h"
 
 double resFactor;
+
 /* Initialisation */
 int main() {
-	for(resFactor = 0.21; resFactor >= .01; resFactor -= 0.05){
+	for(resFactor = 0.12; resFactor > 0.05; resFactor-=0.015){
     	init_grid(2<<5);
    	L0 = 100.;
    	X0 = Y0 = Z0 = 0.;
@@ -57,7 +58,7 @@ event init(t = 0){
 	init_rotor();
 	fan.prolongation=fraction_refine;
 	refine (fan[] > 0. && level < maxlevel);
-	eps = min(meps, resFactor*rot.cu);
+	eps = min(meps, 0.07*rot.cu);
 }
 
 event init_change(i=10){
