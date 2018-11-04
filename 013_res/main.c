@@ -19,9 +19,10 @@ char sim_ID[] = "angles";
 #include "fan.h"
 #include "diagnostics.h"
 
+double resFactor;
 /* Initialisation */
 int main() {
-	for(double resFactor = 0.21; resFactor >= .01; resFactor -= 0.05){
+	for(resFactor = 0.21; resFactor >= .01; resFactor -= 0.05){
     	init_grid(2<<5);
    	L0 = 100.;
    	X0 = Y0 = Z0 = 0.;
