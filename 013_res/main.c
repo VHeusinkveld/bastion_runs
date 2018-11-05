@@ -23,7 +23,7 @@ double resFactor;
 
 /* Initialisation */
 int main() {
-	for(resFactor = 0.12; resFactor > 0.05; resFactor-=0.015){
+	for(resFactor = 0.12; resFactor > 0.01; resFactor-=0.015){
     	init_grid(2<<5);
    	L0 = 100.;
    	X0 = Y0 = Z0 = 0.;
