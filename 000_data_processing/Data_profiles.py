@@ -1,98 +1,92 @@
+"""
+This script plots the vertical profiles for set variables. 
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import processing_functions as pf
+from pandas.plotting import table
 from os import listdir
-font = {'family' : 'serif',
-        'weight' : 'normal',
-        'size'   : 18}
 
-plt.rc('font', **font)
+exp_name = "014_res02"
+res_dir = "results"
+sub_dir = "resolutions"
 
+try_names = [format(item,"02") for item in range(8)]
 
-def one2two(data):
-    data_points = int(np.sqrt(len(data)))
-    return np.reshape(np.array(data),(data_points, data_points))        
-def arr(data):
-    return np.array(data)
-try_names = ["0" + str(item)+ "/" for item in range(5)]
+time_start = 0
+time_offset = 0
+time_interval = 20
+time_end = 10000
 
-for try_name in try_names :
-    exp_name = "011_angles"
-    res_name = "results"
-    cas_name = "angles"
-    #try_name = "02/"
-    
-    data_path_root = "../" + exp_name +"/"+ res_name +"/"+ cas_name+try_name 
-    
-    #%%
-    data_path = data_path_root + "profiles"
-    data_files = listdir(data_path)
-    legend = []
-    fig = plt.figure(figsize=[8,5], dpi=72)
-    for file in data_files:
-        time =  float(file[file.find("t=")+2:])
-        if (time%100==0 and time > 0):
-            legend.append(file)
-            data = pd.read_csv(data_path+"/"+file, "\t")
-            plt.plot(30*data['bdiff'], data['y'])
-            
-    plt.xlabel('dT [K]')
-    plt.ylabel('height [m]')
-    plt.ylim([0, 100])
-    plt.legend(legend)
-    plt.tight_layout()
-    plt.savefig(data_path_root + "profile_buoyancy.png")
-    #%%
-    
-    data_path = data_path_root
-    data = pd.read_csv(data_path_root + "/output", "\t")
-    
-    def my_fun(x):
-        return x[-1] - x[0]
-    
-    fig = plt.figure(figsize=[8,5], dpi=72)
-    plt.plot(data['t'], data['Work']-data['Work'][0])
-    plt.plot(data['t'], data['Ekin'])
-    plt.plot(data['t'], -data['bE'])
-    plt.plot(data['t'], data['Ekin']-data['bE'])
-    plt.legend(['Work', 'Ekin', 'bE', 'Total energy'])
-    plt.xlabel('time [s]')
-    plt.ylabel('Energy [J]')
-    plt.tight_layout()
-    plt.savefig(data_path_root + "energy.png")
-    
-    #%%
-    from matplotlib import animation
-    data_path = data_path_root + "slices"
-    old_files = listdir(data_path)
-    data_files = [item for item in old_files if (item.find('y=') >= 0)]
-    files_length = len(data_files)
-    
-    # animation function
-    def animate(i): 
-        file = data_files[i]
-        time =  float(file[file.find("t=")+2:file.find("t=")+7])
-    
-        data = pd.read_csv(data_path+"/"+file, "\t")
-        plt.clf()
-        img = plt.contourf(one2two(data['x']), one2two(data[' z']), one2two(data['b']), vmin=0, vmax=2)
-        plt.colorbar()
-        plt.title(file)
-        plt.tight_layout()
+plotting = {
+        "bT"     : ["T [K]",     "height [m]", 0, 0, True, True], 
+        "bdiffT" : ["dT [K]",    "height [m]", 0, 0, True, True], 
+        "Ri"    : ["Grad Ri",   "height [m]", [0, 1e4], 0, True, True], 
+        "u.x"   : ["u.x [m/s]", "height [m]", 0, 0, True, True], 
+        "u.y"   : ["u.y [m/s]", "height [m]", 0, 0, True, True], 
+        "u.z"   : ["u.z [m/s]", "height [m]", 0, 0, True, True]
+        } 
         
-        return img
+plot_data = pd.DataFrame(data=plotting,
+                         index=["xlabel", "ylabel", "xlim", "ylim", 
+                                "legend", "table"])
+plot_dpi = 72
+plot_size = [17,11]
+
+
+
+for i, try_name in enumerate(try_names) :
+    data_path_root = pf.data_dir([exp_name, res_dir, sub_dir+try_name])    
+    profile_data_path = data_path_root + "profiles"
+    case_data_path = data_path_root + "case"
+       
+    case = pd.read_csv(case_data_path, "\t")
+    data_files = listdir(profile_data_path)
     
-    fig = plt.figure(figsize=[8,5], dpi=72)
-    Nt = files_length
-    anim = animation.FuncAnimation(fig, animate, frames=Nt)
-    
-    anim.save(data_path_root + 'animation.mp4', fps=2)
-    
-    '''
-    from mpl_toolkits.mplot3d import Axes3D
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.contour(one2two(data['#']), one2two(data['2:y']), one2two(data['3:z']))
-    plt.show()
-    '''
+    for j, name in enumerate(plot_data.columns.values): 
+        legend = []
+        fig = plt.figure(name, figsize=plot_size, dpi=plot_dpi)
+
+        if plot_data[name]["table"]:
+                ax = fig.add_subplot(111)
+                table(ax, np.round(case, 2), loc='top', rowLabels = [''])
+                tab = ax.tables[0]
+                tab.scale(1,2)
+       
+        for k, file in enumerate(data_files):
+            time =  float(file[file.find("t=")+2:])
+            
+            if ((time+time_offset)%time_interval==0 and 
+                time >= time_start and 
+                time <= time_end):
+                
+                if plot_data[name]["legend"]:
+                    legend.append(file)
+                
+                data = pd.read_csv(profile_data_path+"/"+file, "\t")
+                
+                data["bT"] = 273 + 273*(data["b"])/9.81 - 9.81/1004*data["y"]
+                data["bdiffT"] = 273*(data["bdiff"])/9.81
+                
+                plt.figure(name)    
+                plt.plot(data[name], data["y"], '-o')
+
+        plt.figure(name)         
+        plt.xlabel(plot_data[name]["xlabel"])
+        plt.ylabel(plot_data[name]["ylabel"])
+        
+        if plot_data[name]["legend"]:
+            plt.legend(legend, loc='center left', bbox_to_anchor=(1, 0.5))
+        if type(plot_data[name]["xlim"]) == list:
+            plt.xlim(plot_data[name]["xlim"])
+        if type(plot_data[name]["ylim"]) == list:
+            plt.ylim(plot_data[name]["ylim"])
+        
+        
+        plt.tight_layout()
+        plt.savefig(data_path_root + "figure_" + name + ".png")
+        plt.close()  
+
+

@@ -1,3 +1,7 @@
+"""
+Some usefull functions for data fitting.
+"""
+
 import numpy as np
 from scipy.optimize import curve_fit
 
@@ -28,3 +32,10 @@ def fit_exp(xdata, ydata, bounds, return_as):
              'pcov' : pcov}
     
     return x, y, stats
+
+
+#plt.ylim([0,.03])
+#plt.xlim([0,120])
+#x_fit, y_fit, stats = df.fit_exp(data['t'], ((-data['bE'])), 
+#                                 ([0.1, 0],[2, 10]), "exp")
+#plt.plot(x_fit, y_fit, '--')
