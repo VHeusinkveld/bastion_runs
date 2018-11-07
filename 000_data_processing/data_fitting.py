@@ -5,7 +5,7 @@ Some usefull functions for data fitting.
 import numpy as np
 from scipy.optimize import curve_fit
 
-def func(x, a, b):
+def func_lin(x, a, b):
     return (x - b)/a
 
 def fit_exp(xdata, ydata, bounds, return_as):
@@ -19,14 +19,14 @@ def fit_exp(xdata, ydata, bounds, return_as):
     
     xdata = np.log(xdata)
     ydata = np.log(ydata)
-    popt, pcov = curve_fit(func, xdata, ydata, bounds=(bounds))
+    popt, pcov = curve_fit(func_lin, xdata, ydata, bounds=(bounds))
     
     if return_as == "exp":
         x = np.exp(xdata)
-        y = np.exp(func(xdata, *popt))
+        y = np.exp(func_lin(xdata, *popt))
     else:
         x = xdata
-        y = func(xdata, *popt)
+        y = func_lin(xdata, *popt)
     
     stats = {'popt' : popt,
              'pcov' : pcov}
