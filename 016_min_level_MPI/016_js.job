@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --ntasks=8
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --partition inf
+#SBATCH --time=72000
+#SBATCH --mem=8G
+#SBATCH --job-name 016_minlvl_MPI
+#SBATCH --output results/%x.o%j
+#SBATCH --error results/%x.e%j
+
+mpirun -np 8 main016
