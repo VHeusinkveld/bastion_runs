@@ -7,11 +7,14 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "012_angles_MPI"
+exp_name = "016_min_level_MPI"
 res_dir = "results"
-sub_dir = "angles"
+sub_dir = "minlvl"
 
-try_names = ["0" + str(item)+ "/" for item in range(4)]
+try_names = ["0" + str(item)+ "/" for item in range(5)]
+
+plot_dpi = 72
+plot_size = [17,11] 
 
 
 def sort_slice(e):
@@ -40,6 +43,8 @@ def animate(i, k, k_old, j, slices):
         levels = np.linspace(0, 12, 37)
         img = plt.contourf(pf.one2two(data[axes_data[0][0]]), pf.one2two(data[axes_data[1][0]]), data_y, cmap=cm.jet, levels=levels)
     plt.colorbar()
+    plt.xlabel(axes_data[0][0] + " [m]")
+    plt.ylabel(axes_data[1][0] + " [m]")
     plt.title(file)
     plt.tight_layout()
     
@@ -65,14 +70,14 @@ for i, try_name in enumerate(try_names):
             for k, file in enumerate(data_files):
                 cur_depth = file[-3:]
                 if cur_depth != old_depth:
-                    fig = plt.figure(figsize=[8,5], dpi=72)
+                    fig = plt.figure(figsize=plot_size, dpi=plot_dpi)
                     anim = animation.FuncAnimation(fig, animate, frames=k-k_old, fargs=(k, k_old, j, slices))
                     anim.save(data_path_root + "animation_" + plane + old_depth + ".mp4", writer=writer1)        
                     plt.close()
                     k_old = 1*k 
                 old_depth = file[-3:]
                 
-            fig = plt.figure(figsize=[8,5], dpi=72)
+            fig = plt.figure(figsize=plot_size, dpi=plot_dpi)
             anim = animation.FuncAnimation(fig, animate, frames=k-k_old, fargs=(k, k_old, j, slices))
             anim.save(data_path_root + "animation_" + plane + cur_depth + ".mp4", writer=writer1)        
             plt.close()
