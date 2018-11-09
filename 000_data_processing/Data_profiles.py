@@ -9,11 +9,11 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "014_res02"
+exp_name = "016_min_level_MPI"
 res_dir = "results"
-sub_dir = "resolutions"
+sub_dir = "minlvl"
 
-try_names = [format(item,"02") for item in range(8)]
+try_names = [format(item,"02") for item in range(5)]
 
 time_start = 0
 time_offset = 0
@@ -34,8 +34,7 @@ plot_data = pd.DataFrame(data=plotting,
                                 "legend", "table"])
 plot_dpi = 72
 plot_size = [17,11]
-
-
+pf.plot_markup()
 
 for i, try_name in enumerate(try_names) :
     data_path_root = pf.data_dir([exp_name, res_dir, sub_dir+try_name])    

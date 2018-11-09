@@ -8,20 +8,20 @@ import matplotlib.pyplot as plt
 
 import processing_functions as pf
 
-exp_name = "014_res02"
+exp_name = "016_min_level_MPI"
 res_dir = "results"
-sub_dir = "resolutions"
+sub_dir = "minlvl"
 
-try_names = ["0" + str(item)+ "/" for item in range(8)]
+try_names = ["0" + str(item)+ "/" for item in range(5)]
 
-plot_var = "err" 
+plot_var = "minlvl" 
 plot_table = True
 
 plotting = {
         "Ekin"  : ["Time [s]", r"$\textrm{E}_\textrm{kin}$ [J]", 0, 0, plot_var], 
         "bE"    : ["Time [s]", r"$\textrm{E}_\textrm{b}$ [J]", 0, 0, plot_var], 
         "n"     : ["Time [s]", "Girdpoints [\#]", 0, 0, plot_var], 
-        "BP"    : ["Time [s]", r"$\textrm{E}_\textrm{b}$/W [-]", 0, 0, plot_var] 
+        "BP"    : ["Time [s]", r"$\textrm{E}_\textrm{b}$/P [s]", 0, 0, plot_var] 
         } 
         
 plot_data = pd.DataFrame(data=plotting,
@@ -47,7 +47,7 @@ for i, name in enumerate(plot_data.columns.values):
             cases = cases.append(case, ignore_index=True)
             
         data = pd.read_csv(data_path + "output", "\t")
-        data["BP"] = np.abs(data["bE"]/data["Work"])
+        data["BP"] = np.abs(data["bE"]/float(case["P"]))
         
 
         if plot_data[name]["legend"]:
