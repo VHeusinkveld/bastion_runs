@@ -7,15 +7,15 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "019_rotating"
+exp_name = "020_slices"
 res_dir = "results"
-sub_dir = "rotation"
-     
+sub_dir = "test"
+
 try_names = ["0" + str(item)+ "/" for item in range(1)]
 
 plot_dpi = 72
 plot_size = [17,11] 
-
+pf.plot_markup()
 
 def sort_slice(e):
     return e[-3:]
@@ -23,30 +23,39 @@ def sort_slice(e):
       
 def animate(i, k, k_old, j, slices):
     #print(i+k_old,j,k,k_old, len(data_files)) 
-    file = data_files[i+k_old]
+    file_name = data_files[i+k_old]
     #time =  float(file[file.find("t=")+2:file.find("t=")+7])
-    data = pd.read_csv(data_path+"/"+file, "\t")
-    if slices[j] == "y=":
-        factor = float(file[file.find("y=")+2:file.find("y=")+5])*(0.1+9.81/1005)
-        data_y = 273/9.81*(pf.one2two(data["b"]))-factor
-    else: 
-        data_y = 273/9.81*pf.one2two(data["b"])
-    
-    
-    axes_data = 1*slices
-    axes_data.pop(j)
-    plt.clf()
-    if slices[j] == "y=":
-        levels = np.linspace(np.floor(-1), np.ceil(1), 21)
-        img = plt.contourf(pf.one2two(data[axes_data[0][0]]), pf.one2two(data[axes_data[1][0]]), data_y, vmax=1, vmin=-1, cmap=cm.jet, levels=levels)
-    else: 
-        levels = np.linspace(0, 12, 37)
-        img = plt.contourf(pf.one2two(data[axes_data[0][0]]), pf.one2two(data[axes_data[1][0]]), data_y, cmap=cm.jet, levels=levels)
-    plt.colorbar()
-    plt.xlabel(axes_data[0][0] + " [m]")
-    plt.ylabel(axes_data[1][0] + " [m]")
-    plt.title(file)
-    plt.tight_layout()
+    with open(data_path+"/"+file_name) as file:
+        header = file.readline().split()
+        data_info = {}
+        for head in header:
+            place = head.find("=")
+            data_info[head[0:place]] = int(head[place+1:])       
+        field = file.readline()
+        data = []
+        for ii in range(data_info["n"]):
+            line = file.readline()
+            data.append([float(x) for x in line.strip().split("\t")])
+        data = np.transpose(np.array(data))
+
+        axes_data = 1*slices
+        axes_data.pop(j)
+
+        plt.clf()
+        if slices[j] == "y=":
+            levels = np.linspace(np.floor(-1), np.ceil(1), 21)
+            data = data - data_info["y"]*(0.1+9.81/1005)
+            img = plt.imshow(data, levels = levels, extent = (0,data_info["x"],0,data_info["z"]), cmap=cm.jet)
+        elif slices[j] == "x=":
+            img = plt.imshow(data, extent = (0,data_info["y"],0,data_info["z"]), cmap=cm.jet)
+        else:
+            img = plt.imshow(data, extent = (0,data_info["x"],0,data_info["y"]), cmap=cm.jet)
+
+        plt.colorbar()
+        plt.xlabel(axes_data[0][0] + " [m]")
+        plt.ylabel(axes_data[1][0] + " [m]")
+        plt.title(file_name)
+        plt.tight_layout()
     
     return img
 

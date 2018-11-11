@@ -5,16 +5,17 @@ This script plots the energy developments for different values of a set variable
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from os import listdir
 
 import processing_functions as pf
 
-exp_name = "016_min_level_MPI"
+exp_name = "019_rotating"
 res_dir = "results"
-sub_dir = "minlvl"
+sub_dir = "rotation"
+     
+try_names = ["0" + str(item)+ "/" for item in range(1)]
 
-try_names = ["0" + str(item)+ "/" for item in range(5)]
-
-plot_var = "minlvl" 
+plot_var = "phi" 
 plot_table = True
 
 plotting = {

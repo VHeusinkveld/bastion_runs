@@ -9,15 +9,15 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "016_min_level_MPI"
+exp_name = "019_rotating"
 res_dir = "results"
-sub_dir = "minlvl"
-
-try_names = [format(item,"02") for item in range(5)]
+sub_dir = "rotation"
+     
+try_names = ["0" + str(item)+ "/" for item in range(1)]
 
 time_start = 0
 time_offset = 0
-time_interval = 20
+time_interval = 60
 time_end = 10000
 
 plotting = {
