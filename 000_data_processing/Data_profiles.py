@@ -9,9 +9,9 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "019_rotating"
+exp_name = "021_angles_averaged"
 res_dir = "results"
-sub_dir = "rotation"
+sub_dir = "angles"
      
 try_names = ["0" + str(item)+ "/" for item in range(1)]
 
@@ -23,6 +23,7 @@ time_end = 10000
 plotting = {
         "bT"     : ["T [K]",     "height [m]", 0, 0, True, True], 
         "bdiffT" : ["dT [K]",    "height [m]", 0, 0, True, True], 
+        "bdiffcalc" : ["dT [K]",    "height [m]", 0, 0, True, True],      
         "Ri"    : ["Grad Ri",   "height [m]", [0, 1e4], 0, True, True], 
         "u.x"   : ["u.x [m/s]", "height [m]", 0, 0, True, True], 
         "u.y"   : ["u.y [m/s]", "height [m]", 0, 0, True, True], 
@@ -68,6 +69,7 @@ for i, try_name in enumerate(try_names) :
                 
                 data["bT"] = 273 + 273*(data["b"])/9.81 - 9.81/1004*data["y"]
                 data["bdiffT"] = 273*(data["bdiff"])/9.81
+                data["bdiffcalc"] = 273*(data["b"])/9.81 - (float(case["inversion"]) + 9.81/1004)*data["y"]
                 
                 plt.figure(name)    
                 plt.plot(data[name], data["y"], '-o')

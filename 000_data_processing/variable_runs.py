@@ -9,11 +9,11 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "019_rotating"
+exp_name = "018_angles_highres"
 res_dir = "results"
-sub_dir = "rotation"
+sub_dir = "angles"
      
-try_names = ["0" + str(item)+ "/" for item in range(1)]
+try_names = ["0" + str(item)+ "/" for item in range(5)]
 
 plot_var = "phi" 
 plot_table = True

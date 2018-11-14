@@ -7,9 +7,9 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "019_rotating"
+exp_name = "021_angles_averaged"
 res_dir = "results"
-sub_dir = "rotation"
+sub_dir = "angles"
      
 try_names = ["0" + str(item)+ "/" for item in range(1)]
 

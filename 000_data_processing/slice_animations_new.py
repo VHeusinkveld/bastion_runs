@@ -7,9 +7,9 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "020_slices"
+exp_name = "021_angles_averaged"
 res_dir = "results"
-sub_dir = "test"
+sub_dir = "angles"
 
 try_names = ["0" + str(item)+ "/" for item in range(1)]
 
@@ -36,7 +36,7 @@ def animate(i, k, k_old, j, slices):
         for ii in range(data_info["n"]):
             line = file.readline()
             data.append([float(x) for x in line.strip().split("\t")])
-        data = np.transpose(np.array(data))
+        data = 273/9.81*np.transpose(np.array(data))
 
         axes_data = 1*slices
         axes_data.pop(j)
@@ -44,16 +44,25 @@ def animate(i, k, k_old, j, slices):
         plt.clf()
         if slices[j] == "y=":
             levels = np.linspace(np.floor(-1), np.ceil(1), 21)
-            data = data - data_info["y"]*(0.1+9.81/1005)
-            img = plt.imshow(data, levels = levels, extent = (0,data_info["x"],0,data_info["z"]), cmap=cm.jet)
+            data = data - data_info["y"]*(0.2+9.81/1005)
+            img = plt.imshow(data, extent = (0,data_info["x"],0,data_info["z"]), cmap=cm.jet, vmin=-1, vmax=1)
+            plot_xlabel = axes_data[0][0] 
+            plot_ylabel = axes_data[1][0] 
+            
         elif slices[j] == "x=":
-            img = plt.imshow(data, extent = (0,data_info["y"],0,data_info["z"]), cmap=cm.jet)
+            data = np.transpose(data)
+            #data = data - data_info["y"]*(0.2+9.81/1005)
+            img = plt.imshow(data, extent = (0,data_info["z"],0,data_info["y"]), cmap=cm.jet, origin='lower')
+            plot_xlabel = axes_data[1][0] 
+            plot_ylabel = axes_data[0][0] 
         else:
-            img = plt.imshow(data, extent = (0,data_info["x"],0,data_info["y"]), cmap=cm.jet)
+            img = plt.imshow(data, extent = (0,data_info["x"],0,data_info["y"]), cmap=cm.jet, origin='lower')
+            plot_xlabel = axes_data[0][0] 
+            plot_ylabel = axes_data[1][0] 
 
         plt.colorbar()
-        plt.xlabel(axes_data[0][0] + " [m]")
-        plt.ylabel(axes_data[1][0] + " [m]")
+        plt.xlabel(plot_xlabel + " [m]")
+        plt.ylabel(plot_ylabel + " [m]")
         plt.title(file_name)
         plt.tight_layout()
     
