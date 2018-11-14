@@ -1588,3 +1588,20 @@ WARNING: convergence for p not reached after 100 iterations
   res: 185.249 sum: 1.45828e+07 nrelax: 100
 WARNING: convergence for p not reached after 100 iterations
   res: 182.05 sum: 1.44609e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 180.134 sum: 1.43343e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 177.15 sum: 1.42234e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 175.03 sum: 1.40987e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 171.52 sum: 1.39867e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 168.704 sum: 1.38329e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 166.622 sum: 1.36764e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 165.151 sum: 1.3576e+07 nrelax: 100
+WARNING: convergence for p not reached after 100 iterations
+  res: 163.003 sum: 1.34213e+07 nrelax: 100
+slurmstepd: error: *** JOB 2292 ON cirrus-3 CANCELLED AT 2018-11-14T21:35:00 ***
