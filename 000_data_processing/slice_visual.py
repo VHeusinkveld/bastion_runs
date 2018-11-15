@@ -11,7 +11,7 @@ exp_name = "022_angles_corrected"
 res_dir = "results"
 sub_dir = "angles"
 
-try_names = ["0" + str(item)+ "/" for item in range(1)]
+try_names = ["0" + str(item)+ "/" for item in range(4)]
 
 plot_dpi = 72
 plot_size = [17,11] 
@@ -31,7 +31,7 @@ for try_name in try_names:
     
     for file_name in files:
         time =  float(file_name[file_name.find("t=")+2:file_name.find("t=")+7])
-        if time >= 180:
+        if time >= 269:
             with open(data_path+"/"+file_name) as file:
     
                 plane = [item for item in slices if file_name.find(item)>=0]

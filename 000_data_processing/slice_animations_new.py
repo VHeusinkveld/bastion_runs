@@ -11,7 +11,7 @@ exp_name = "021_angles_averaged"
 res_dir = "results"
 sub_dir = "angles"
 
-try_names = ["0" + str(item)+ "/" for item in range(1)]
+try_names = ["0" + str(item)+ "/" for item in range(4)]
 
 plot_dpi = 72
 plot_size = [17,11] 

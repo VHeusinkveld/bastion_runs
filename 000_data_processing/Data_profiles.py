@@ -13,7 +13,7 @@ exp_name = "022_angles_corrected"
 res_dir = "results"
 sub_dir = "angles"
      
-try_names = ["0" + str(item)+ "/" for item in range(1)]
+try_names = ["0" + str(item)+ "/" for item in range(4)]
 
 time_start = 0
 time_offset = 0

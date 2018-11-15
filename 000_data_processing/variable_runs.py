@@ -9,13 +9,13 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "018_angles_highres"
+exp_name = "022_angles_corrected"
 res_dir = "results"
 sub_dir = "angles"
      
-try_names = ["0" + str(item)+ "/" for item in range(5)]
+try_names = ["0" + str(item)+ "/" for item in range(4)]
 
-plot_var = "phi" 
+plot_var = "theta" 
 plot_table = True
 
 plotting = {
