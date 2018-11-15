@@ -9,7 +9,7 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "021_angles_averaged"
+exp_name = "022_angles_corrected"
 res_dir = "results"
 sub_dir = "angles"
      
