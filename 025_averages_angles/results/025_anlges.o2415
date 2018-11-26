@@ -1,0 +1,23 @@
+--------------------------------------------------------------------------
+An MPI process has executed an operation involving a call to the
+"fork()" system call to create a child process.  Open MPI is currently
+operating in a condition that could result in memory corruption or
+other system errors; your MPI job may hang, crash, or produce silent
+data corruption.  The use of fork() (or system() or other calls that
+create child processes) is strongly discouraged.  
+
+The process that invoked fork was:
+
+  Local host:          cirrus-3 (PID 2412)
+  MPI_COMM_WORLD rank: 0
+
+If you are *absolutely sure* that your application will successfully
+and correctly survive a call to fork(), you may disable this warning
+by setting the mpi_warn_on_fork MCA parameter to 0.
+--------------------------------------------------------------------------
+
+# Octree, 18155 steps, 9640.47 CPU, 9645 real, 1.53e+05 points.step/s, 35 var
+# 16 procs, MPI: min 6.1e+03 (64%) avg 6.7e+03 (69%) max 7.1e+03 (74%)
+--------------------------------------------------------------------------
+mpirun noticed that process rank 0 with PID 2412 on node cirrus-3 exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
