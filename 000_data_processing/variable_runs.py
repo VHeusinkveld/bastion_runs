@@ -9,11 +9,11 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "022_angles_corrected"
+exp_name = "028_averages_powers_new"
 res_dir = "results"
-sub_dir = "angles"
-     
-try_names = ["0" + str(item)+ "/" for item in range(4)]
+sub_dir = "power"
+
+try_names = ["0" + str(item)+ "/" for item in range(5)]
 
 plot_var = "theta" 
 plot_table = True

@@ -9,25 +9,23 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "022_angles_corrected"
+exp_name = "028_averages_powers_new"
 res_dir = "results"
-sub_dir = "angles"
+sub_dir = "power"
      
-try_names = ["0" + str(item)+ "/" for item in range(4)]
+try_names = ["0" + str(item)+ "/" for item in range(5)]
 
 time_start = 0
 time_offset = 0
-time_interval = 60
+time_interval = 30
 time_end = 10000
 
 plotting = {
-        "bT"     : ["T [K]",     "height [m]", 0, 0, True, True], 
-        "bdiffT" : ["dT [K]",    "height [m]", 0, 0, True, True], 
+        "bT"     : ["T [K]",     "height [m]", 0, 0, True, True],  
         "bdiffcalc" : ["dT [K]",    "height [m]", 0, 0, True, True],      
-        "Ri"    : ["Grad Ri",   "height [m]", [0, 1e4], 0, True, True], 
-        "u.x"   : ["u.x [m/s]", "height [m]", 0, 0, True, True], 
-        "u.y"   : ["u.y [m/s]", "height [m]", 0, 0, True, True], 
-        "u.z"   : ["u.z [m/s]", "height [m]", 0, 0, True, True]
+       # "u.x"   : ["u.x [m/s]", "height [m]", 0, 0, True, True], 
+       # "u.y"   : ["u.y [m/s]", "height [m]", 0, 0, True, True], 
+       # "u.z"   : ["u.z [m/s]", "height [m]", 0, 0, True, True]
         } 
         
 plot_data = pd.DataFrame(data=plotting,
@@ -68,7 +66,6 @@ for i, try_name in enumerate(try_names) :
                 data = pd.read_csv(profile_data_path+"/"+file, "\t")
                 
                 data["bT"] = 273 + 273*(data["b"])/9.81 - 9.81/1004*data["y"]
-                data["bdiffT"] = 273*(data["bdiff"])/9.81
                 data["bdiffcalc"] = 273*(data["b"])/9.81 - (float(case["inversion"]) + 9.81/1004)*data["y"]
                 
                 plt.figure(name)    

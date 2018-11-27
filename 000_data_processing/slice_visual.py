@@ -7,7 +7,7 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "022_angles_corrected"
+exp_name = "024_angles_2domain"
 res_dir = "results"
 sub_dir = "angles"
 
