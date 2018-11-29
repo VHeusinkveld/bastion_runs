@@ -15,3 +15,6 @@ If you are *absolutely sure* that your application will successfully
 and correctly survive a call to fork(), you may disable this warning
 by setting the mpi_warn_on_fork MCA parameter to 0.
 --------------------------------------------------------------------------
+
+# Octree, 56978 steps, 129035 CPU, 1.29e+05 real, 1.17e+05 points.step/s, 35 var
+# 16 procs, MPI: min 7.5e+04 (58%) avg 8.3e+04 (64%) max 9e+04 (69%)
