@@ -21,3 +21,6 @@ by setting the mpi_warn_on_fork MCA parameter to 0.
 
 # Octree, 39196 steps, 84950 CPU, 8.497e+04 real, 1.48e+05 points.step/s, 35 var
 # 24 procs, MPI: min 5.3e+04 (62%) avg 5.8e+04 (68%) max 6.2e+04 (73%)
+
+# Octree, 37582 steps, 81840.6 CPU, 8.186e+04 real, 1.46e+05 points.step/s, 35 var
+# 24 procs, MPI: min 5.1e+04 (63%) avg 5.6e+04 (68%) max 6e+04 (73%)
