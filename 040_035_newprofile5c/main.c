@@ -13,7 +13,7 @@
 /** Global variables */
 int minlevel, maxlevel;         	// Grid depths
 double meps, eps;			// Maximum error and error in u fields
-double TEND = 30.;
+double TEND = 300.;
 
 char sim_ID[] = "rotation";		// Simulation identifier
 char sim_var[] = "theta";  		// Notes if a variable is varied over runs
