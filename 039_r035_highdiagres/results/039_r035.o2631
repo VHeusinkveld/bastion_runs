@@ -1,0 +1,41 @@
+--------------------------------------------------------------------------
+An MPI process has executed an operation involving a call to the
+"fork()" system call to create a child process.  Open MPI is currently
+operating in a condition that could result in memory corruption or
+other system errors; your MPI job may hang, crash, or produce silent
+data corruption.  The use of fork() (or system() or other calls that
+create child processes) is strongly discouraged.  
+
+The process that invoked fork was:
+
+  Local host:          cirrus-3 (PID 55880)
+  MPI_COMM_WORLD rank: 0
+
+If you are *absolutely sure* that your application will successfully
+and correctly survive a call to fork(), you may disable this warning
+by setting the mpi_warn_on_fork MCA parameter to 0.
+--------------------------------------------------------------------------
+
+# Octree, 9016 steps, 9556.57 CPU, 9561 real, 4.65e+04 points.step/s, 35 var
+# 10 procs, MPI: min 5.9e+03 (62%) avg 6.4e+03 (66%) max 6.9e+03 (72%)
+
+# Octree, 9016 steps, 5153.63 CPU, 5156 real, 9.09e+04 points.step/s, 35 var
+# 10 procs, MPI: min 3.2e+03 (63%) avg 3.4e+03 (66%) max 3.7e+03 (72%)
+
+# Octree, 9016 steps, 3201.85 CPU, 3204 real, 1.39e+05 points.step/s, 35 var
+# 10 procs, MPI: min 1.9e+03 (60%) avg 2.1e+03 (67%) max 2.3e+03 (71%)
+
+# Octree, 9016 steps, 3186.44 CPU, 3189 real, 1.4e+05 points.step/s, 35 var
+# 10 procs, MPI: min 1.9e+03 (59%) avg 2.1e+03 (67%) max 2.3e+03 (71%)
+
+# Octree, 9016 steps, 10050.8 CPU, 1.006e+04 real, 4.48e+04 points.step/s, 35 var
+# 10 procs, MPI: min 5.9e+03 (58%) avg 6.7e+03 (66%) max 7.4e+03 (74%)
+
+# Octree, 9016 steps, 9165.09 CPU, 9168 real, 4.93e+04 points.step/s, 35 var
+# 10 procs, MPI: min 5.6e+03 (61%) avg 6.3e+03 (69%) max 6.8e+03 (74%)
+
+# Octree, 9016 steps, 7284.61 CPU, 7288 real, 6.33e+04 points.step/s, 35 var
+# 10 procs, MPI: min 4.4e+03 (61%) avg 5e+03 (68%) max 5.4e+03 (74%)
+
+# Octree, 9016 steps, 3776.34 CPU, 3779 real, 1.24e+05 points.step/s, 35 var
+# 10 procs, MPI: min 2.4e+03 (62%) avg 2.6e+03 (68%) max 2.7e+03 (73%)
