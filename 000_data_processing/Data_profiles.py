@@ -9,12 +9,7 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "035_angles_P1"
-res_dir = "results"
-sub_dir = "angles"
-L0 = 200
-     
-try_names = ["0" + str(item)+ "/" for item in [0]]
+try_names = ["0" + str(item)+ "/" for item in range(8)]
 
 time_start = 0
 time_offset = 0

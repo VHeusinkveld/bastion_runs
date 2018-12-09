@@ -8,59 +8,9 @@ from mayavi import mlab
 
 binfile = True
 
-#%%
-exp_name = "027_averages_angles_new"
-res_dir = "results"
-sub_dir = "average"
-L0 = 100
-#%%
-exp_name = "028_averages_powers_new"
-res_dir = "results"
-sub_dir = "power"
-L0 = 100
-#%%
-## Wrong scaling ...
-exp_name = "031_rotaion_2"
-res_dir = "results"
-sub_dir = "rotation"
-L0 = 200
-#%%
-## Very high min res, no scaling problems
-exp_name = "032_rotation_3"
-res_dir = "results"
-sub_dir = "rotation"
-L0 = 200
-#%%
-## One less minres as 32 --> more speed 
-exp_name = "033_rotation_4"
-res_dir = "results"
-sub_dir = "rotation"
-L0 = 200
-#%%
-exp_name = "034_rotation_5"
-res_dir = "results"
-sub_dir = "rotation"
-L0 = 200
-#%%
-exp_name = "035_angles_P1"
-res_dir = "results"
-sub_dir = "angles"
-L0 = 200
-#%%
-exp_name = "036_anlges_P2"
-res_dir = "results"
-sub_dir = "angles"
-L0 = 200
-#%%
-exp_name = "038_anlges_P2_strat4"
-res_dir = "results"
-sub_dir = "angles"
-L0 = 200
-#%%
-
-
-try_names = ["0" + str(item)+ "/" for item in [6]]
+try_names = ["0" + str(item)+ "/" for item in [1, 2, 3, 4, 5, 6]]
 fig = plt.figure(figsize=[10, 5])
+#pf.plot_markup()
 legend = []
 
 for i, try_name in enumerate(try_names):
@@ -91,25 +41,45 @@ for i, try_name in enumerate(try_names):
     original_field = (0.2 + 9.81/1004)*Y
     equifield_data = equifield_data[:,:,:] - original_field.T
     
-    hist, bin_edges = np.histogram(equifield_data, bins=20)
-    contractx = (0.4*4*np.cos(case["theta"].values[0]-np.pi/2))/(0.4*4*np.cos(case["theta"].values[0]-np.pi/2) + 0.4*18*(abs(np.sin(case["theta"].values[0]-np.pi/2))))
-    if case["theta"].values[0]-np.pi/2 < 0 and contractx != 1:
-        contractx = -1*contractx 
-    contracty = 1 #np.power(case["P"].values[0], -1)
-    plt.plot(contractx*(bin_edges[:-1]), contracty*hist)
-    legend.append(["angle=" + str(np.round(180*case["theta"].values[0]/np.pi - 90, 1)), "cf=" + str(np.round(contractx,  2))])
-#plt.xlim(left=0)
-plt.ylim([0, 20])
+    hist, bin_edges = np.histogram(equifield_data, bins=50)
+    
+    strat = case['inversion'][0]
+    
+    rad = 4
+    penetration = 14
+    dxrange = np.linspace(0, penetration, len(bin_edges[:-1]))
+    #dxrange = dxrange*(dxrange <= 5) + 15*(dxrange > 5)
+    depth = strat*rad*np.cos(case["theta"].values[0]-np.pi/2) + strat*dxrange*(abs(np.sin(case["theta"].values[0]-np.pi/2)))
+    
+    contractx = (strat*rad*np.cos(case["theta"].values[0]-np.pi/2))/(depth)
+    #maxval = 0.4/contractx 
+    #minval = (0.2 - abs(0.2*np.sin(case["theta"].values[0]-np.pi/2)))*np.cos(case["theta"].values[0]-np.pi/2)
+    #contractx = 1/(maxval - minval)*(np.abs(bin_edges[:-1]) > minval)
+    
+    #yeaplot = contractx > minval
+    
+    if np.sin(case["theta"].values[0] - np.pi/2) < 0 and contractx != 1:
+         contractx[::-1] = -1*contractx
+    
+    dyrange = np.linspace(0, penetration, len(hist))
+    contracty = 1#dyrange*(np.cos(case["theta"].values[0]-np.pi/2))**2)
+    
+    hist = hist*(hist > 1) + (hist <= 1)
+    plt.plot(contractx*(bin_edges[:-1]), (np.log(contracty*hist)))
+    legend.append(["angle=" + str(np.round(180*case["theta"].values[0]/np.pi - 90, 1)), "cf=" + str(np.round(np.min(contractx),  2))])
+plt.xlim(left=0)
+plt.ylim([0, 10])
 plt.legend(legend)
 plt.ylabel("log(nr) in bin")
 plt.xlabel("dT [K]")
 plt.show()   
 
 
-     #%%
+#%%
 s = equifield_data
 
 src = mlab.pipeline.scalar_field(M[0], M[1], M[2], s)
+#%%
 mlab.pipeline.iso_surface(src, contours=[-0.1   , ], opacity=0.3)
 mlab.pipeline.iso_surface(src, contours=[s.min()*0.2, ], opacity=0.3)
 mlab.pipeline.iso_surface(src, contours=[s.min()*0.4, ], opacity=0.3)
@@ -117,6 +87,7 @@ mlab.pipeline.iso_surface(src, contours=[s.min()*0.6, ], opacity=0.3)
 mlab.pipeline.iso_surface(src, contours=[s.max()*0.2, ], opacity=0.3)
 mlab.axes()
 mlab.pipeline.iso_surface(src, contours=[s.max()*0.4, ], opacity=0.3)
+#%%%
 mlab.pipeline.iso_surface(src, contours=[s.max()*0.6, ],)
 mlab.orientation_axes()
 mlab.colorbar()

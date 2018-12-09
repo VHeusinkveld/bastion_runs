@@ -9,11 +9,8 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "033_rotation_4"
-res_dir = "results"
-sub_dir = "rotation"
 
-try_names = ["0" + str(item)+ "/" for item in range(3)]
+try_names = ["0" + str(item)+ "/" for item in range(8)]
 
 plot_var = "theta" 
 plot_table = True
