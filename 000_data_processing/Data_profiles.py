@@ -9,23 +9,24 @@ import processing_functions as pf
 from pandas.plotting import table
 from os import listdir
 
-exp_name = "028_averages_powers_new"
+exp_name = "035_angles_P1"
 res_dir = "results"
-sub_dir = "power"
+sub_dir = "angles"
+L0 = 200
      
-try_names = ["0" + str(item)+ "/" for item in range(5)]
+try_names = ["0" + str(item)+ "/" for item in [0]]
 
 time_start = 0
 time_offset = 0
-time_interval = 30
+time_interval = 60
 time_end = 10000
 
 plotting = {
         "bT"     : ["T [K]",     "height [m]", 0, 0, True, True],  
         "bdiffcalc" : ["dT [K]",    "height [m]", 0, 0, True, True],      
-       # "u.x"   : ["u.x [m/s]", "height [m]", 0, 0, True, True], 
-       # "u.y"   : ["u.y [m/s]", "height [m]", 0, 0, True, True], 
-       # "u.z"   : ["u.z [m/s]", "height [m]", 0, 0, True, True]
+        "u.x"   : ["u.x [m/s]", "height [m]", 0, 0, True, True], 
+        "u.y"   : ["u.y [m/s]", "height [m]", 0, 0, True, True], 
+        "u.z"   : ["u.z [m/s]", "height [m]", 0, 0, True, True]
         } 
         
 plot_data = pd.DataFrame(data=plotting,
