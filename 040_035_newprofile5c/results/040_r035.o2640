@@ -24,3 +24,85 @@ by setting the mpi_warn_on_fork MCA parameter to 0.
 
 # Octree, 9016 steps, 3331.9 CPU, 3335 real, 1.33e+05 points.step/s, 35 var
 # 8 procs, MPI: min 2e+03 (60%) avg 2.2e+03 (67%) max 2.4e+03 (73%)
+
+# Octree, 9016 steps, 2867.19 CPU, 2871 real, 1.54e+05 points.step/s, 35 var
+# 8 procs, MPI: min 1.8e+03 (63%) avg 1.9e+03 (66%) max 2e+03 (70%)
+
+# Octree, 9016 steps, 2711.56 CPU, 2715 real, 1.65e+05 points.step/s, 35 var
+# 8 procs, MPI: min 1.6e+03 (60%) avg 1.8e+03 (65%) max 1.8e+03 (68%)
+
+# Octree, 9016 steps, 2858.94 CPU, 2863 real, 1.58e+05 points.step/s, 35 var
+# 8 procs, MPI: min 1.7e+03 (60%) avg 1.9e+03 (66%) max 2e+03 (70%)
+
+# Octree, 9015 steps, 2886.59 CPU, 2890 real, 1.59e+05 points.step/s, 35 var
+# 8 procs, MPI: min 1.7e+03 (60%) avg 1.9e+03 (66%) max 2.1e+03 (71%)
+
+# Octree, 9016 steps, 2929.28 CPU, 2932 real, 1.6e+05 points.step/s, 35 var
+# 8 procs, MPI: min 1.8e+03 (61%) avg 1.9e+03 (66%) max 2.1e+03 (71%)
+   calls    total     self   % total   function
+955338418   11350.02   11350.02     30.2% (25.1% - 42.0%)   mpi_waitany():/home/vincenth/basilisk/src/grid/tree-mpi.h:275
+121140262   15410.07   8340.86     22.2% (15.5% - 24.6%)   mpi_boundary_level():/home/vincenth/basilisk/src/grid/tree-mpi.h:429
+  144194   2875.28   2875.28      7.7% ( 5.7% -  8.8%)   mpi_boundary_update_buffers():/home/vincenth/basilisk/src/grid/tree-mpi.h:937
+ 2962877   11261.11   2321.11      6.2% ( 3.5% -  8.8%)   boundary():/home/vincenth/basilisk/src/grid/cartesian-common.h:301
+  144270   7295.82   2002.25      5.3% ( 4.8% -  6.5%)   diffusion():/home/vincenth/basilisk/src/diffusion.h:103
+   72135   6168.05   1975.03      5.3% ( 4.7% -  6.2%)   viscous_term():/home/vincenth/basilisk/src/navier-stokes/centered.h:321
+   72079   4168.58   1800.42      4.8% ( 3.5% -  5.7%)   balance():/home/vincenth/basilisk/src/grid/balance.h:390
+ 2437489   1730.21   1730.21      4.6% ( 2.0% -  7.8%)   mpi_all_reduce0():/home/vincenth/basilisk/src/common.h:660
+  144270   6902.81   1515.88      4.0% ( 3.6% -  4.9%)   project():/home/vincenth/basilisk/src/poisson.h:509
+  721278   1536.65   988.82      2.6% ( 2.0% -  3.0%)   mpi_boundary_coarsen():/home/vincenth/basilisk/src/grid/tree-mpi.h:1115
+   72135   5388.05   470.43      1.3% ( 0.9% -  1.6%)   advection_term():/home/vincenth/basilisk/src/navier-stokes/centered.h:278
+362766907   348.16   348.16      0.9% ( 0.5% -  1.2%)   rcv_pid_wait():/home/vincenth/basilisk/src/grid/tree-mpi.h:336
+    1208   283.96   283.96      0.8% ( 0.7% -  0.8%)   compose_image():/home/vincenth/basilisk/src/view.h:329
+   72135   9950.14   264.32      0.7% ( 0.6% -  0.8%)   adapt_wavelet():/home/vincenth/basilisk/src/grid/tree-common.h:292
+120486383   4886.65   257.68      0.7% ( 0.5% -  0.8%)   mpi_boundary_restriction():/home/vincenth/basilisk/src/grid/tree-mpi.h:436
+  216381   823.94   195.80      0.5% ( 0.4% -  0.7%)   fractions():/home/vincenth/basilisk/src/fractions.h:336
+   72119   180.77   148.71      0.4% ( 0.3% -  0.5%)   z_indexing():/home/vincenth/basilisk/src/grid/tree-mpi.h:1405
+   72135   579.90   141.85      0.4% ( 0.3% -  0.5%)   tracer_advection_0():/home/vincenth/basilisk/src/tracer.h:40
+    1208   564.50    98.29      0.3% ( 0.3% -  0.3%)   movies():./diagnostics.h:213
+   72135   280.52    71.80      0.2% ( 0.1% -  0.3%)   Eddyvis():/home/vincenth/basilisk/src/SGS.h:66
+   72135   4191.22    60.19      0.2% ( 0.1% -  0.2%)   projection():/home/vincenth/basilisk/src/navier-stokes/centered.h:378
+   72127   1051.40    58.41      0.2% ( 0.1% -  0.2%)   forcing():./fan.h:74
+   72115   483.93    47.56      0.1% ( 0.1% -  0.2%)   balance():/home/vincenth/basilisk/src/grid/balance.h:243
+   96688    62.66    46.01      0.1% ( 0.1% -  0.2%)   mpi_boundary_refine():/home/vincenth/basilisk/src/grid/tree-mpi.h:1005
+   72135   793.13    23.80      0.1% ( 0.0% -  0.1%)   acceleration():/home/vincenth/basilisk/src/navier-stokes/centered.h:342
+316388444    22.26    22.26      0.1% ( 0.0% -  0.1%)   interpolate():/home/vincenth/basilisk/src/grid/cartesian-common.h:633
+   72143   137.53    20.98      0.1% ( 0.0% -  0.1%)   stability():/home/vincenth/basilisk/src/navier-stokes/centered.h:189
+     808    41.99    18.57      0.0% ( 0.0% -  0.1%)   equidiags():./diagnostics.h:148
+      40    17.59    17.59      0.0% ( 0.0% -  0.3%)   equioutputs():./diagnostics.h:160
+    2416    13.71    13.71      0.0% ( 0.0% -  0.1%)   squares():/home/vincenth/basilisk/src/draw.h:884
+    1208   296.24    12.27      0.0% ( 0.0% -  0.3%)   save():/home/vincenth/basilisk/src/view.h:486
+   72135    11.27    11.27      0.0% ( 0.0% -  0.0%)   acceleration_0():./physics.h:78
+    1208    24.36     6.63      0.0% ( 0.0% -  0.0%)   isosurface():/home/vincenth/basilisk/src/draw.h:1085
+    1208     6.52     6.52      0.0% ( 0.0% -  0.0%)   cells():/home/vincenth/basilisk/src/draw.h:767
+      40     6.47     4.25      0.0% ( 0.0% -  0.0%)   dump():/home/vincenth/basilisk/src/output.h:1145
+    1208     2.09     2.09      0.0% ( 0.0% -  0.0%)   box():/home/vincenth/basilisk/src/draw.h:1011
+     320     2.10     1.91      0.0% ( 0.0% -  0.0%)   output_slice():/home/vincenth/basilisk/src/output_slices.h:112
+    1208     1.91     1.91      0.0% ( 0.0% -  0.0%)   draw_vof():/home/vincenth/basilisk/src/draw.h:718
+      32     4.12     1.52      0.0% ( 0.0% -  0.0%)   init_grid():/home/vincenth/basilisk/src/grid/tree.h:1691
+       8   37560.44     0.88      0.0% ( 0.0% -  0.0%)   run():/home/vincenth/basilisk/src/run.h:37
+      88     3.85     0.88      0.0% ( 0.0% -  0.0%)   profiles():./diagnostics.h:143
+    2408     0.85     0.60      0.0% ( 0.0% -  0.0%)   diagnostics():./diagnostics.h:135
+ 1160616     0.16     0.16      0.0% ( 0.0% -  0.0%)   interpolate():/home/vincenth/basilisk/src/grid/cartesian-common.h:632
+      16     2.22     0.12      0.0% ( 0.0% -  0.0%)   slices():./diagnostics.h:250
+   72135   744.18     0.12      0.0% ( 0.0% -  0.0%)   adapt():/home/vincenth/basilisk/src/navier-stokes/centered.h:388
+       8     2.16     0.08      0.0% ( 0.0% -  0.0%)   init_1():main.c:68
+  144278   1071.45     0.06      0.0% ( 0.0% -  0.0%)   properties():/home/vincenth/basilisk/src/navier-stokes/centered.h:208
+   72135   9950.20     0.06      0.0% ( 0.0% -  0.0%)   adapt_0():main.c:79
+   72135   3652.76     0.04      0.0% ( 0.0% -  0.0%)   tracer_diffusion_2():./physics.h:85
+   72135   3643.13     0.04      0.0% ( 0.0% -  0.0%)   tracer_diffusion_1():/home/vincenth/basilisk/src/SGS.h:74
+       8     0.14     0.02      0.0% ( 0.0% -  0.0%)   init():/home/vincenth/basilisk/src/navier-stokes/centered.h:176
+   72135     0.01     0.01      0.0% ( 0.0% -  0.0%)   set_dtmax():/home/vincenth/basilisk/src/navier-stokes/centered.h:185
+     488     0.01     0.01      0.0% ( 0.0% -  0.0%)   progress():main.c:84
+   72135     0.00     0.00      0.0% ( 0.0% -  0.0%)   tracer_diffusion():/home/vincenth/basilisk/src/navier-stokes/centered.h:199
+   72135     0.00     0.00      0.0% ( 0.0% -  0.0%)   vof():/home/vincenth/basilisk/src/navier-stokes/centered.h:197
+   72135     0.00     0.00      0.0% ( 0.0% -  0.0%)   tracer_diffusion_0():/home/vincenth/basilisk/src/tracer.h:45
+   72135     0.00     0.00      0.0% ( 0.0% -  0.0%)   tracer_advection():/home/vincenth/basilisk/src/navier-stokes/centered.h:198
+   24008     0.00     0.00      0.0% ( 0.0% -  0.0%)   rotate():./fan.h:90
+      40     6.47     0.00      0.0% ( 0.0% -  0.0%)   dumpfields():main.c:90
+     192     0.00     0.00      0.0% ( 0.0% -  0.0%)   boundary():/home/vincenth/basilisk/src/grid/cartesian-common.h:291
+       8     0.00     0.00      0.0% ( 0.0% -  0.0%)   end():main.c:94
+       8     0.00     0.00      0.0% ( 0.0% -  0.0%)   defaults_1():/home/vincenth/basilisk/src/SGS.h:53
+       8     0.00     0.00      0.0% ( 0.0% -  0.0%)   defaults():/home/vincenth/basilisk/src/navier-stokes/centered.h:149
+       8     0.00     0.00      0.0% ( 0.0% -  0.0%)   init_0():./diagnostics.h:67
+       8     0.00     0.00      0.0% ( 0.0% -  0.0%)   init_change():main.c:74
+       8     0.00     0.00      0.0% ( 0.0% -  0.0%)   defaults_0():/home/vincenth/basilisk/src/tracer.h:30
