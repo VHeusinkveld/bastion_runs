@@ -7,10 +7,6 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "024_angles_2domain"
-res_dir = "results"
-sub_dir = "angles"
-
 try_names = ["0" + str(item)+ "/" for item in range(4)]
 
 plot_dpi = 72
@@ -31,7 +27,7 @@ for try_name in try_names:
     
     for file_name in files:
         time =  float(file_name[file_name.find("t=")+2:file_name.find("t=")+7])
-        if time >= 269:
+        if time >= 240:
             with open(data_path+"/"+file_name) as file:
     
                 plane = [item for item in slices if file_name.find(item)>=0]

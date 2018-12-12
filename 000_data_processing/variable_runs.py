@@ -9,11 +9,8 @@ from os import listdir
 
 import processing_functions as pf
 
-exp_name = "028_averages_powers_new"
-res_dir = "results"
-sub_dir = "power"
 
-try_names = ["0" + str(item)+ "/" for item in range(5)]
+try_names = ["0" + str(item)+ "/" for item in range(8)]
 
 plot_var = "theta" 
 plot_table = True

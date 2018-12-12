@@ -1,0 +1,12 @@
+ERROR Check fan volume, V=1.46555, Vr=0
+n	red	Ekin	Work	bE
+262144	512	-nan	0	0
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+main041: /home/vincenth/basilisk/src/common.h:532: end_trace: Assertion `Trace.stack.len >= 2*sizeof(double)' failed.
+/var/spool/slurmd/job02641/slurm_script: line 12: 44321 Aborted                 (core dumped) OMP_NUM_THREADS=16 ./main041
